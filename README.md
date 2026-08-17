@@ -101,6 +101,12 @@ AR(2) [approximate]: z = -0.529, p = 0.597
   where the extra moments hold by construction, Hansen rejects at p<0.001 and
   the AR coefficient comes back 0.34 against a true 0.75. Use
   `diff_gmm(..., collapse=True)`, which recovers 0.778 on the same design.
+- **Standard errors are not yet validated.** Cross-checked against `xtabond2`
+  ([full comparison](validation/RESULTS.md)): the instrument matrix, sample
+  dimensions and Hansen degrees of freedom match exactly, and coefficients
+  agree to about ±0.02 — but standard errors are off by factors of 0.4× to 3×.
+  The Windmeijer correction is the prime suspect. **Do not rely on the
+  reported inference until 0.1.2.**
 - **AR(1)/AR(2) are labelled `[approximate]`.** They are a simplified m-test
   that does not net out parameter-estimation error. Directionally reliable,
   not a substitute for the exact Arellano-Bond statistic.
