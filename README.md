@@ -21,7 +21,7 @@
 
 ---
 
-A unified Python implementation of seven methodologies for dynamic panels with
+A unified Python implementation of eight methodologies for dynamic panels with
 high-dimensional controls — classical GMM, bias corrections, LASSO-based
 moment selection, double machine learning, orthogonal/debiased Lasso, optimal
 shrinkage, and neural lag discovery — behind one data container, one results
@@ -47,7 +47,7 @@ infrastructure that you can run all of them on the same panel and compare.
 
 | Module | Method | Source |
 |---|---|---|
-| `gmm` | Difference / system GMM, Anderson–Hsiao | Arellano & Bond (1991); Blundell & Bond (1998) |
+| `gmm` | Difference GMM, Anderson–Hsiao (system GMM disabled, see below) | Arellano & Bond (1991); Blundell & Bond (1998) |
 | `biascorr` | Analytical, split-panel, Kiviet bias corrections | Hahn & Kuersteiner (2002); Dhaene & Jochmans (2015) |
 | `ablasso` | Arellano–Bond LASSO moment selection | Chernozhukov, Fernández-Val, Huang & Wang (2024) |
 | `dml` | Double ML, blocked-time cross-fitting | Sneller (2026) |
@@ -94,13 +94,26 @@ AR(2): z = -0.733, p = 0.464
 
 ---
 
+## Known limitations
+
+- **`system_gmm()` raises `NotImplementedError`.** The level-equation
+  instrument block does not validate: on a mean-stationary simulated panel
+  where the extra moments hold by construction, Hansen rejects at p<0.001 and
+  the AR coefficient comes back 0.34 against a true 0.75. Use
+  `diff_gmm(..., collapse=True)`, which recovers 0.778 on the same design.
+- **AR(1)/AR(2) are labelled `[approximate]`.** They are a simplified m-test
+  that does not net out parameter-estimation error. Directionally reliable,
+  not a substitute for the exact Arellano-Bond statistic.
+
+---
+
 ## Which method should I use?
 
 Start from the shape of your panel, not from the method you have heard of.
 
 ```
 Is T short (under ~15)?
-├── Yes → gmm.diff_gmm / gmm.system_gmm, or biascorr.*
+├── Yes → gmm.diff_gmm (collapse=True), or biascorr.*
 │         The ML estimators need sqrt(N)/T → 0 and will mislead you here.
 └── No  → Do you have many controls, or nonlinear ones?
           ├── No  → Is m²/(NT) large?  (many moment conditions)

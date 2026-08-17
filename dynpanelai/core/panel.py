@@ -16,8 +16,8 @@ Chernozhukov, Fernandez-Val, Huang and Wang (2024) and Sneller (2026) alike.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Iterable, Sequence
 
 import numpy as np
 import pandas as pd
@@ -317,7 +317,7 @@ class PanelData:
         lags: int | Iterable[int] = 1,
         *,
         dropna: bool = False,
-    ) -> "PanelData":
+    ) -> PanelData:
         """Return a new panel with lag columns appended.
 
         Parameters
@@ -395,7 +395,7 @@ class PanelData:
         values = mat[self.df["_t"].to_numpy(), self.df["_i"].to_numpy()]
         return pd.Series(values, index=self.df.index, name=name)
 
-    def balance(self) -> "PanelData":
+    def balance(self) -> PanelData:
         """Drop units not observed in every period, returning a balanced panel."""
         counts = self.df.groupby("_i")["_t"].nunique()
         keep = counts[counts == self.T].index

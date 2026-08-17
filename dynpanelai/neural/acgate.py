@@ -34,8 +34,8 @@ Requires PyTorch: ``pip install dynpanelai[neural]``.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -225,7 +225,7 @@ class ACGate:
         import torch
         from torch import nn
 
-        K, H = self.K, self.hidden
+        K, H, L = self.K, self.hidden, self.layers
         tau, lam_pos = self.tau, self.lam_pos
 
         class Net(nn.Module):
@@ -244,7 +244,7 @@ class ACGate:
                     nn.Linear(1, 16), nn.Tanh(), nn.Linear(16, K)
                 )
                 self.lstm = nn.LSTM(
-                    n_features, H, num_layers=2, batch_first=True
+                    n_features, H, num_layers=L, batch_first=True
                 )
                 self.head = nn.Sequential(nn.Linear(H + 1, 32), nn.ReLU(), nn.Linear(32, 1))
                 pos = torch.arange(1, K + 1, dtype=torch.float32) / K
@@ -326,7 +326,9 @@ class ACGate:
         Yn = (Y - mu_y) / sd_y
         Pn = (P - mu_p) / sd_p
 
-        t = lambda a: torch.tensor(np.asarray(a, dtype=np.float32))
+        def t(a):
+            return torch.tensor(np.asarray(a, dtype=np.float32))
+
         Xt, Yt, Pt = t(Xn), t(Yn), t(Pn)
         Pobs = Pt[units]
 

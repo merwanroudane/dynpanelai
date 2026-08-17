@@ -53,8 +53,7 @@ published paper; pass ``transform='fd'`` to reproduce the R package.
 
 from __future__ import annotations
 
-import warnings
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd

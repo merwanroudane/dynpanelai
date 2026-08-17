@@ -5,8 +5,8 @@ machine-learning method in this package is benchmarked:
 
 - Arellano and Bond (1991): difference GMM, instrumenting the differenced
   equation with lagged levels.
-- Arellano and Bover (1995) / Blundell and Bond (1998): system GMM, adding
-  the levels equation instrumented by lagged differences.
+- Blundell and Bond (1998): system GMM.  **Disabled in this release** --
+  see :func:`system_gmm` for why.
 - Anderson and Hsiao (1981): just-identified IV, the minimal instrument set.
 
 with the standard specification tests (Hansen J, Arellano-Bond AR(1)/AR(2))
@@ -25,8 +25,8 @@ implausibly close to 1.0 is the classic symptom of too many instruments.
 from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -36,11 +36,6 @@ from ..core.panel import PanelData
 from ..core.results import PanelResults
 
 __all__ = ["DynamicPanelGMM", "diff_gmm", "system_gmm", "anderson_hsiao"]
-
-
-def _collapse(Z: np.ndarray, blocks: list[tuple[int, int]]) -> np.ndarray:
-    """Collapse instrument columns by summing within lag blocks."""
-    return np.column_stack([Z[:, a:b].sum(axis=1) for a, b in blocks])
 
 
 @dataclass
@@ -120,93 +115,26 @@ class DynamicPanelGMM:
 
     # ------------------------------------------------------------------
     def _build(self, panel: PanelData):
-        """Assemble transformed regressors, outcome, and instrument blocks."""
+        """Assemble the design via :func:`~dynpanelai.gmm.build.build_design`.
+
+        Returns
+        -------
+        GMMDesign
+        """
+        from .build import build_design
+
         s = self.spec
-        # Unbalanced panels are the norm (the Arellano-Bond employment data
-        # itself is unbalanced).  Rather than dropping units, we build the
-        # wide layout with NaN, drop only the (i, t) cells whose outcome or
-        # regressors are missing, and zero-fill missing instruments -- the
-        # convention used by xtabond2.
-        T, N = panel.T, panel.N
-        Y = panel.wide(s.y)
-        P = {v: panel.wide(v) for v in s.predetermined}
-        E = {v: panel.wide(v) for v in s.exogenous}
-
-        if self.transformation == "fd":
-            tr = lambda M: np.diff(M, axis=0)
-            first = 1
-        elif self.transformation == "fod":
-            from ..core.transforms import fod_matrix
-
-            tr = lambda M: fod_matrix(M.shape[0]) @ M
-            first = 0
-        else:
-            raise ValueError("transformation must be 'fd' or 'fod'")
-
-        start = s.lags + 1
-        rows_y, rows_X, rows_Z, row_units = [], [], [], []
-
-        for t in range(start, T):
-            # transformed dependent variable at period t
-            dY = tr(Y)[t - 1] if self.transformation == "fd" else tr(Y)[t - 1]
-            regs = [tr(Y)[t - 1 - j] for j in range(1, s.lags + 1)]
-            for v in s.predetermined:
-                regs.append(tr(P[v])[t - 1])
-            for v in s.exogenous:
-                regs.append(tr(E[v])[t - 1])
-            X_t = np.column_stack(regs)
-
-            # GMM instruments: levels of y dated t-lo .. t-hi
-            lo, hi = s.gmm_lags
-            hi_eff = t if hi is None else min(hi, t)
-            cols, blocks = [], []
-            pos = 0
-            for lag in range(lo, hi_eff + 1):
-                idx = t - lag
-                if idx < 0:
-                    continue
-                cols.append(Y[idx])
-                blocks.append((pos, pos + 1))
-                pos += 1
-            for v in s.predetermined:
-                for lag in range(lo, hi_eff + 1):
-                    idx = t - lag
-                    if idx < 0:
-                        continue
-                    cols.append(P[v][idx])
-                    pos += 1
-            for v in s.exogenous:
-                cols.append(tr(E[v])[t - 1])
-                pos += 1
-            Z_t = np.column_stack(cols) if cols else np.zeros((N, 0))
-
-            rows_y.append(dY)
-            rows_X.append(X_t)
-            rows_Z.append(Z_t)
-            row_units.append(np.arange(N))
-
-        width = max(z.shape[1] for z in rows_Z)
-        Z_pad = [
-            np.hstack([z, np.zeros((z.shape[0], width - z.shape[1]))]) for z in rows_Z
-        ]
-        if s.collapse:
-            Z_pad = [z[:, :width] for z in Z_pad]
-
-        y_vec = np.concatenate(rows_y)
-        X_mat = np.vstack(rows_X)
-        Z_mat = np.vstack(Z_pad)
-        units = np.concatenate(row_units)
-        n_periods = len(rows_y)
-
-        ok = np.isfinite(y_vec) & np.isfinite(X_mat).all(axis=1)
-        Z_mat = np.nan_to_num(Z_mat)
-        return (
-            y_vec[ok],
-            X_mat[ok],
-            Z_mat[ok],
-            units[ok],
-            np.repeat(np.arange(n_periods), N)[ok],
-            N,
+        return build_design(
+            panel,
+            y=s.y,
+            lags=s.lags,
+            predetermined=s.predetermined,
+            exogenous=s.exogenous,
+            transformation=self.transformation,
+            level=self.level,
+            gmm_lags=s.gmm_lags,
+            collapse=s.collapse,
+            time_dummies=s.time_dummies,
         )
 
     # ------------------------------------------------------------------
@@ -231,12 +159,13 @@ class DynamicPanelGMM:
         p-value above roughly 0.9 usually signals instrument proliferation
         rather than a well-specified model.
         """
-        y, X, Z, units, periods, N = self._build(panel)
+        design = self._build(panel)
+        y, X, Z = design.y, design.X, design.Z
+        units, periods = design.units, design.periods
+        N = len(np.unique(units))
         n, k = X.shape
         m = Z.shape[1]
-
-        names = [f"L{j}.{self.spec.y}" for j in range(1, self.spec.lags + 1)]
-        names += list(self.spec.predetermined) + list(self.spec.exogenous)
+        names = design.names
 
         if m < k:
             raise ValueError(
@@ -284,8 +213,12 @@ class DynamicPanelGMM:
 
         # ---- tests -----------------------------------------------------
         hansen = self._hansen(Z, resid, W, N, m, k)
-        ar1 = self._ar_test(resid, units, periods, 1)
-        ar2 = self._ar_test(resid, units, periods, 2)
+        # The Arellano-Bond serial-correlation test is defined on the residuals
+        # of the *transformed* equation.  Under system GMM each (unit, period)
+        # appears twice, so the level rows must be excluded.
+        d_only = ~design.is_level
+        ar1 = self._ar_test(resid[d_only], units[d_only], periods[d_only], 1)
+        ar2 = self._ar_test(resid[d_only], units[d_only], periods[d_only], 2)
 
         res = PanelResults(
             params=pd.Series(beta, index=names),
@@ -301,9 +234,11 @@ class DynamicPanelGMM:
             dependent=self.spec.y,
             diagnostics={
                 "instruments": m,
+                "  of which: difference eq.": design.n_diff_instruments,
+                "  of which: level eq.": design.n_level_instruments,
                 "Hansen J": f"chi2({hansen[1]}) = {hansen[0]:.3f}, p = {hansen[2]:.3f}",
-                "AR(1)": f"z = {ar1[0]:.3f}, p = {ar1[1]:.3f}",
-                "AR(2)": f"z = {ar2[0]:.3f}, p = {ar2[1]:.3f}",
+                "AR(1) [approximate]": f"z = {ar1[0]:.3f}, p = {ar1[1]:.3f}",
+                "AR(2) [approximate]": f"z = {ar2[0]:.3f}, p = {ar2[1]:.3f}",
             },
             extra={"resid": resid, "Z": Z, "X": X},
         )
@@ -392,7 +327,48 @@ def diff_gmm(panel: PanelData, y: str, **kwargs) -> PanelResults:
 
 
 def system_gmm(panel: PanelData, y: str, **kwargs) -> PanelResults:
-    """System GMM (Blundell and Bond, 1998).  See :class:`DynamicPanelGMM`."""
+    """System GMM (Blundell and Bond, 1998).
+
+    .. warning::
+       **Not available in this release.**  The level-equation instrument block
+       is implemented but does not yet validate: on a mean-stationary
+       simulated panel where the additional moment conditions are valid by
+       construction, Hansen's test rejects at :math:`p < 0.001` and the
+       autoregressive coefficient is recovered as 0.34 against a true 0.75.
+       That pattern indicates an error in the instrument construction, not a
+       failure of the data.
+
+       Rather than return plausible-looking but wrong numbers, this function
+       raises.  Use :func:`diff_gmm` -- which is validated, and with
+       ``collapse=True`` recovers 0.778 against the same true 0.75.
+
+    Raises
+    ------
+    NotImplementedError
+        Always, until the level-equation instruments are corrected and
+        validated against a reference implementation.
+
+    See Also
+    --------
+    diff_gmm : Difference GMM, validated.
+    dynpanelai.ablasso.ABLasso : For long panels with many moment conditions.
+    """
+    raise NotImplementedError(
+        "system_gmm is disabled in this release: the level-equation "
+        "instrument block does not validate (Hansen rejects at p<0.001 on a "
+        "simulated panel where the level moments hold by construction, and "
+        "the AR coefficient is recovered as 0.34 against a true 0.75).\n\n"
+        "Use diff_gmm(..., collapse=True) instead, which recovers 0.778 on "
+        "the same design. Progress is tracked at\n"
+        "https://github.com/merwanroudane/dynpanelai/issues"
+    )
+
+
+def _system_gmm_experimental(panel: PanelData, y: str, **kwargs) -> PanelResults:
+    """Unvalidated system-GMM path, retained for development only.
+
+    Do not use for research. See :func:`system_gmm` for why.
+    """
     kwargs["level"] = True
     return DynamicPanelGMM(y=y, **kwargs).fit(panel)
 

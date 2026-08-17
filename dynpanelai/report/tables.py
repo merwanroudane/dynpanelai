@@ -8,12 +8,12 @@ panel footer, and diagnostics in the table notes.  Output targets are LaTeX
 
 from __future__ import annotations
 
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 import numpy as np
 import pandas as pd
 
-from ..core.results import PanelResults, stars
+from ..core.results import PanelResults
 
 __all__ = [
     "results_to_latex",

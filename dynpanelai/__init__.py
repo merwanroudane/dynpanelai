@@ -1,14 +1,15 @@
 """dynpanelai: machine learning and modern inference for dynamic panel data.
 
-A unified implementation of seven methodologies for dynamic panels with
+A unified implementation of eight methodologies for dynamic panels with
 high-dimensional controls, all sharing one data container, one results object,
 and one reporting layer.
 
 =========================  ====================================================
 Module                     Method and source
 =========================  ====================================================
-:mod:`~dynpanelai.gmm`     Difference / system GMM, Anderson-Hsiao.
-                           Arellano and Bond (1991); Blundell and Bond (1998).
+:mod:`~dynpanelai.gmm`     Difference GMM and Anderson-Hsiao.
+                           Arellano and Bond (1991).  System GMM is disabled
+                           in this release; see :func:`~dynpanelai.gmm.system_gmm`.
 :mod:`~dynpanelai.biascorr`  Analytical, split-panel and Kiviet bias
                            corrections for the within estimator.
 :mod:`~dynpanelai.ablasso` Arellano-Bond LASSO.  Chernozhukov, Fernandez-Val,
@@ -40,8 +41,7 @@ Choosing a method
 Start from the shape of your panel and what you want to learn.
 
 - **Short T (under ~15), low-dimensional controls** -- use
-  :func:`~dynpanelai.gmm.diff_gmm` or
-  :func:`~dynpanelai.gmm.system_gmm`.  The ML estimators here need
+  :func:`~dynpanelai.gmm.diff_gmm`.  The ML estimators here need
   ``sqrt(N)/T -> 0`` and will mislead you in short panels.
 - **Long T, many moment conditions** -- use
   :class:`~dynpanelai.ablasso.ABLasso`.  Check whether ``m^2/(NT)`` is large;
@@ -60,7 +60,7 @@ See ``docs/user_guide.md`` for the step-by-step walkthrough.
 
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Merwan Roudane"
 
 from . import (

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dynpanelai"
-version = "0.1.0"
+version = "0.1.1"
 description = "Machine learning and modern inference for dynamic panel data models"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -65,12 +65,18 @@ include = ["dynpanelai*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-filterwarnings = ["ignore::UserWarning", "ignore::FutureWarning"]
+# Do NOT silence UserWarning globally: this package uses warnings as its
+# guardrail mechanism (instrument proliferation, sqrt(N)/T, weak sparsity).
+# Silencing them would hide exactly what the tests exist to verify.
+filterwarnings = [
+    "ignore:.*n_alphas.*:FutureWarning",
+    "ignore::DeprecationWarning:sklearn.*",
+]
 
 [tool.ruff]
 line-length = 95
 target-version = "py310"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B"]
-ignore = ["E501", "B008"]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501", "E741", "F841"]

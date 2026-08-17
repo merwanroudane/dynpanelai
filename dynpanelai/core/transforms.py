@@ -40,7 +40,7 @@ Nickell, S. (1981). *Econometrica* 49(6), 1417-1426.
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd

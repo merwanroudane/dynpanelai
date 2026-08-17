@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check dynpanelai tests
+
+  core:
+    name: core · py${{ matrix.python }} · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12"]
+        os: [ubuntu-latest]
+        include:
+          - python: "3.12"
+            os: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Install (core only, no torch)
+        run: |
+          python -m pip install -U pip
+          pip install -e ".[plots]" pytest pytest-cov
+      - name: Test
+        run: pytest -q --cov=dynpanelai --cov-report=term-missing
+
+  neural:
+    name: neural extra · py3.11
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install with PyTorch (CPU)
+        run: |
+          python -m pip install -U pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[plots]" pytest
+      - name: Test including AC-GATE
+        run: pytest -q
+
+  build:
+    name: build & package check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - name: Verify bundled data ships in both artifacts
+        run: |
+          python - <<'EOF'
+          import glob, tarfile, zipfile, sys
+          sd = glob.glob("dist/*.tar.gz")[0]
+          wh = glob.glob("dist/*.whl")[0]
+          s = [n for n in tarfile.open(sd).getnames() if n.endswith(".parquet")]
+          w = [n for n in zipfile.ZipFile(wh).namelist() if n.endswith(".parquet")]
+          print("sdist parquet:", s)
+          print("wheel parquet:", w)
+          assert len(s) == 2 and len(w) == 2, "bundled datasets missing"
+          bad = [n for n in tarfile.open(sd).getnames()
+                 if n.endswith((".pdf", ".zip")) or "_references" in n]
+          assert not bad, f"reference material leaked into sdist: {bad}"
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

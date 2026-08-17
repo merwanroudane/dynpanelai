@@ -42,12 +42,11 @@ restores asymptotic normality.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Sequence
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 from ..core.panel import PanelData
 from ..core.results import PanelResults
@@ -116,7 +115,7 @@ def simultaneous_ci(
     L = V @ np.diag(np.sqrt(w))
 
     rng = np.random.default_rng(seed)
-    draws = np.abs((L @ rng.standard_normal((d, n_boot)))).max(axis=0)
+    draws = np.abs(L @ rng.standard_normal((d, n_boot))).max(axis=0)
     crit = float(np.quantile(draws, 1 - alpha))
     bands = np.column_stack([beta - crit * se, beta + crit * se])
     return bands, crit

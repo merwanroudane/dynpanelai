@@ -219,7 +219,7 @@ def nodewise_inverse(
     \\lambda_{node}/\\widehat\\tau_j^2`, which is exactly the bound needed to
     make the desparsification remainder negligible.
     """
-    from .rlasso import lambda_plugin, rlasso as _rlasso
+    from .rlasso import rlasso as _rlasso
 
     X = np.asarray(X, dtype=float)
     n, p = X.shape
