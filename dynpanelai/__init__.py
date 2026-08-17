@@ -60,7 +60,7 @@ See ``docs/user_guide.md`` for the step-by-step walkthrough.
 
 from __future__ import annotations
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __author__ = "Merwan Roudane"
 
 from . import (

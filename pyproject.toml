@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dynpanelai"
-version = "0.1.1"
+version = "0.1.2"
 description = "Machine learning and modern inference for dynamic panel data models"
 readme = "README.md"
 requires-python = ">=3.10"

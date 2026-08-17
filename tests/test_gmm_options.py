@@ -213,3 +213,72 @@ def test_instrument_proliferation_warning_is_not_silenced(employment):
     with pytest.warns(UserWarning, match="instrument"):
         dp.diff_gmm(small, "n", lags=1, predetermined=["w"],
                     gmm_lags=(2, None), collapse=False, steps=1)
+
+
+# ------------------------------------------------- xtabond2 cross-validation
+# Reference: StataNow 19.5, xtabond2 3.7.2, webuse abdata
+#   xtabond2 n L(1/2).n w k, gmm(n w, lag(2 4) collapse) iv(k) noleveleq ...
+XTABOND2 = {
+    1: {  # one-step, robust
+        "L1.n": (-0.0287032, 0.4021562),
+        "L2.n": (0.0455574, 0.1303349),
+        "w": (-1.851055, 0.7427967),
+        "k": (0.4064098, 0.0759036),
+    },
+    2: {  # two-step, Windmeijer-corrected
+        "L1.n": (0.0572805, 0.4420636),
+        "L2.n": (0.0222885, 0.1467757),
+        "w": (-1.680533, 0.7757580),
+        "k": (0.4103221, 0.0824243),
+    },
+}
+
+
+@pytest.mark.parametrize("steps", [1, 2])
+def test_matches_xtabond2_coefficients(employment, steps):
+    res = dp.diff_gmm(employment, "n", lags=2, predetermined=["w"],
+                      exogenous=["k"], gmm_lags=(2, 4), collapse=True,
+                      steps=steps)
+    for name, (coef, _) in XTABOND2[steps].items():
+        assert res.params[name] == pytest.approx(coef, abs=5e-4), (
+            f"{name} at {steps}-step: {res.params[name]:.6f} vs xtabond2 {coef:.6f}"
+        )
+
+
+@pytest.mark.parametrize("steps", [1, 2])
+def test_matches_xtabond2_standard_errors(employment, steps):
+    """Guards the two bugs that made these disagree.
+
+    The one-step weight matrix needs the MA(1) kernel H (2 on the diagonal,
+    -1 adjacent), not Z'Z; and the Windmeijer correction evaluates the score
+    at the second-step residuals, not the first.
+    """
+    res = dp.diff_gmm(employment, "n", lags=2, predetermined=["w"],
+                      exogenous=["k"], gmm_lags=(2, 4), collapse=True,
+                      steps=steps)
+    for name, (_, se) in XTABOND2[steps].items():
+        assert res.bse[name] == pytest.approx(se, rel=0.01), (
+            f"se({name}) at {steps}-step: {res.bse[name]:.6f} vs "
+            f"xtabond2 {se:.6f} (ratio {res.bse[name] / se:.4f})"
+        )
+
+
+def test_windmeijer_inflates_standard_errors(employment):
+    """The correction must raise two-step SEs toward the one-step ones."""
+    kw = dict(lags=2, predetermined=["w"], exogenous=["k"],
+              gmm_lags=(2, 4), collapse=True)
+    one = dp.diff_gmm(employment, "n", steps=1, **kw)
+    two = dp.diff_gmm(employment, "n", steps=2, **kw)
+    assert two.bse["L1.n"] > one.bse["L1.n"], (
+        "uncorrected two-step SEs are downward biased; the Windmeijer "
+        "correction must inflate them"
+    )
+
+
+def test_fod_uses_identity_kernel(employment):
+    """FOD leaves the error uncorrelated, so H = I and the FD kernel must not apply."""
+    from dynpanelai.gmm.estimator import _one_step_moment_matrix
+
+    d = build_design(employment, transformation="fod", **BASE)
+    got = _one_step_moment_matrix(d.Z, d.units, d.periods, d.is_level, "fod")
+    assert np.allclose(got, d.Z.T @ d.Z)

@@ -38,6 +38,79 @@ from ..core.results import PanelResults
 __all__ = ["DynamicPanelGMM", "diff_gmm", "system_gmm", "anderson_hsiao"]
 
 
+def _one_step_moment_matrix(
+    Z: np.ndarray,
+    units: np.ndarray,
+    periods: np.ndarray,
+    is_level: np.ndarray,
+    transformation: str,
+) -> np.ndarray:
+    """Return :math:`\\sum_i Z_i' H Z_i`, the one-step weight matrix kernel.
+
+    The efficient one-step weight under homoskedasticity is not
+    :math:`(Z'Z)^{-1}`.  First-differencing induces an MA(1) error, so the
+    correct kernel uses the tridiagonal
+
+    .. math::
+        H = \\begin{pmatrix}
+              2 & -1 &  &  \\\\
+             -1 &  2 & -1 &  \\\\
+                & \\ddots & \\ddots & \\ddots
+            \\end{pmatrix},
+
+    which is what ``xtabond2`` uses by default.  Forward orthogonal deviations
+    leave the transformed error serially uncorrelated, so there :math:`H = I`
+    and this reduces to :math:`Z'Z`.  Rows belonging to the levels equation
+    also take :math:`H = I`.
+
+    Using :math:`H = I` for a first-differenced equation is not merely
+    inefficient: it changes the one-step estimate and its standard errors, and
+    it does so unevenly across coefficients, because each regressor's own
+    serial-correlation structure interacts with the omitted off-diagonal.
+
+    Parameters
+    ----------
+    Z : ndarray of shape (n, m)
+    units, periods : ndarray of shape (n,)
+    is_level : ndarray of bool, shape (n,)
+    transformation : {'fd', 'fod'}
+
+    Returns
+    -------
+    ndarray of shape (m, m)
+    """
+    if transformation != "fd":
+        return Z.T @ Z
+
+    m = Z.shape[1]
+    out = np.zeros((m, m))
+    for g in np.unique(units):
+        sel = np.flatnonzero(units == g)
+        diff_rows = sel[~is_level[sel]]
+        level_rows = sel[is_level[sel]]
+
+        if len(diff_rows):
+            order = np.argsort(periods[diff_rows])
+            rows = diff_rows[order]
+            t = periods[rows]
+            k = len(rows)
+            H = np.zeros((k, k))
+            np.fill_diagonal(H, 2.0)
+            # -1 only where the two rows are genuinely adjacent in time;
+            # a gap breaks the MA(1) link
+            adj = (t[1:] - t[:-1]) == 1
+            idx = np.flatnonzero(adj)
+            H[idx, idx + 1] = -1.0
+            H[idx + 1, idx] = -1.0
+            Zi = Z[rows]
+            out += Zi.T @ H @ Zi
+
+        if len(level_rows):
+            Zi = Z[level_rows]
+            out += Zi.T @ Zi
+    return out
+
+
 @dataclass
 class _Spec:
     y: str
@@ -177,7 +250,12 @@ class DynamicPanelGMM:
         Zy = Z.T @ y
 
         # ---- step 1: identity-ish weight ------------------------------
-        W1 = np.linalg.pinv(Z.T @ Z / N)
+        W1 = np.linalg.pinv(
+            _one_step_moment_matrix(
+                Z, units, periods, design.is_level, self.transformation
+            )
+            / N
+        )
         A1 = ZX.T @ W1 @ ZX
         beta1 = np.linalg.pinv(A1) @ (ZX.T @ W1 @ Zy)
 
@@ -209,7 +287,7 @@ class DynamicPanelGMM:
             cov = A_inv @ (ZX.T @ W @ S1 @ W @ ZX) @ A_inv
         else:
             cov = A_inv * N
-            cov = self._windmeijer(X, Z, resid1, beta, W, A_inv, ZX, units, N, cov)
+            cov = self._windmeijer(X, Z, resid1, resid, W, A_inv, ZX, units, N, cov)
 
         # ---- tests -----------------------------------------------------
         hansen = self._hansen(Z, resid, W, N, m, k)
@@ -255,15 +333,35 @@ class DynamicPanelGMM:
 
     # ------------------------------------------------------------------
     @staticmethod
-    def _windmeijer(X, Z, resid1, beta, W, A_inv, ZX, units, N, cov2):
-        """Windmeijer (2005) correction; falls back to the uncorrected matrix."""
+    def _windmeijer(X, Z, resid1, resid2, W, A_inv, ZX, units, N, cov2):
+        """Windmeijer (2005) finite-sample correction for two-step GMM.
+
+        Two-step standard errors are severely downward biased in short panels
+        because the optimal weight matrix is itself estimated from first-step
+        residuals.  The correction adds the first-order effect of that
+        estimation:
+
+        .. math::
+            D_{\\cdot j} = -M\\,X'ZW\\;
+                \\frac{\\partial \\widehat S}{\\partial\\beta_j}\\;
+                W\\,\\sum_i Z_i'\\widehat u_i(\\widehat\\beta_2),
+
+        .. math::
+            V_{corr} = V_2 + DV_2 + (DV_2)' + D V_1 D'.
+
+        The two residual vectors play different roles and must not be
+        interchanged: the score :math:`\\sum_i Z_i'\\widehat u_i` is evaluated
+        at the **second-step** estimate, while the derivative of the weight
+        matrix is evaluated at the **first-step** residuals, because it is the
+        first step that produced the weight matrix being differentiated.
+        """
         try:
             k = X.shape[1]
             m = Z.shape[1]
             zs = np.zeros(m)
             for g in np.unique(units):
                 sel = units == g
-                zs += Z[sel].T @ (X[sel] @ beta * 0 + resid1[sel])
+                zs += Z[sel].T @ resid2[sel]
             D = np.zeros((k, k))
             M_XZ_W = A_inv @ ZX.T @ W
             for j in range(k):

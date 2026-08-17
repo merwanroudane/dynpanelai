@@ -295,7 +295,9 @@ def windmeijer_correction(
     W_inv : ndarray
         Inverse of the second-step weight matrix.
     zs : ndarray
-        ``Z'u`` summed over units at the second step.
+        ``Z'u`` summed over units, evaluated at the **second-step**
+        estimate.  Using first-step residuals here is a common and easy
+        mistake; it changes the correction materially.
     vcov_prev : ndarray
         First-step variance matrix.
     X, Z : ndarray
