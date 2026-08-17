@@ -155,7 +155,7 @@ If this is much above 1, plain Arellano–Bond is biased and you want
 
 ```
 Is T short (under ~15)?
-├── Yes → gmm.diff_gmm / gmm.system_gmm, or biascorr.*
+├── Yes → gmm.diff_gmm (collapse=True), or biascorr.*
 └── No  → Many controls, or nonlinear ones?
           ├── No  → m²/(NT) large?
           │         ├── Yes → ablasso.ABLasso
@@ -227,8 +227,8 @@ AR(2): z = -0.733, p = 0.464
 
 | Test | What you want | Why |
 |---|---|---|
-| **AR(1)** | **rejects** (p < 0.05) | The differenced error is MA(1) by construction. Not rejecting suggests something is wrong. |
-| **AR(2)** | **does not reject** | If it rejects, lag-2 instruments are invalid — go deeper with `gmm_lags=(3, ...)`. |
+| **AR(1)** `[approximate]` | **rejects** (p < 0.05) | The differenced error is MA(1) by construction. Not rejecting suggests something is wrong. |
+| **AR(2)** `[approximate]` | **does not reject** | If it rejects, lag-2 instruments are invalid — go deeper with `gmm_lags=(3, ...)`. |
 | **Hansen J** | does not reject, but **p < 0.9** | A p-value near 1.00 is the classic symptom of instrument proliferation, not of a good model. |
 | **instruments** | fewer than the number of units | Otherwise the weight matrix is singular and Hansen has no power. |
 

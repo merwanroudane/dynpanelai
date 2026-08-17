@@ -77,7 +77,10 @@ apply_transform(panel, cols, method="within", **kw)
 
 ## GMM
 
-### `DynamicPanelGMM(y, ...)` · `diff_gmm(panel, y, ...)` · `system_gmm(...)`
+### `DynamicPanelGMM(y, ...)` · `diff_gmm(panel, y, ...)`
+
+> **`system_gmm()` raises `NotImplementedError` in this release** — the
+> level-equation instruments do not validate. Use `diff_gmm(collapse=True)`.
 
 | Argument | Default | Description |
 |---|---|---|
@@ -92,7 +95,8 @@ apply_transform(panel, cols, method="within", **kw)
 | `collapse` | `False` | Collapse instruments, keeping count linear in `T` |
 | `time_dummies` | `False` | |
 
-**Diagnostics returned:** `instruments`, `Hansen J`, `AR(1)`, `AR(2)`
+**Diagnostics returned:** `instruments` (split by equation), `Hansen J`,
+`AR(1) [approximate]`, `AR(2) [approximate]`
 
 ### `anderson_hsiao(panel, y, lags=1, exogenous=None, instrument='level')`
 

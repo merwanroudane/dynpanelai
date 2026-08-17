@@ -12,7 +12,7 @@
 | | |
 |---|---|
 | 📘 **Documentation site** | **https://merwanroudane.github.io/dynpanelai/** |
-| 📦 **PyPI package** | **https://pypi.org/project/dynpanelai/** |
+| 📦 **PyPI package** | **https://pypi.org/project/dynpanelai/** · v0.1.1 |
 | 💻 Source | https://github.com/merwanroudane/dynpanelai |
 | 📖 User guide | [docs/user_guide.md](docs/user_guide.md) |
 | 📑 Syntax reference | [docs/syntax_reference.md](docs/syntax_reference.md) |
@@ -68,27 +68,27 @@ panel = dp.PanelData(df, unit="id", time="year")
 
 res = dp.diff_gmm(panel, y="n", lags=2,
                   predetermined=["w"], exogenous=["k"],
-                  gmm_lags=(2, 4), steps=2)
+                  gmm_lags=(2, 4), collapse=True, steps=2)
 print(res.summary())
 ```
 
 ```
 ==============================================================================
-Difference GMM (2-step, FD)
+Difference GMM (2-step, FD, collapsed)
 Dependent variable: n
 Observations = 611   Units = 140   Periods = 9
 ------------------------------------------------------------------------------
                     coef    std.err.         z     P>|z|
 ------------------------------------------------------------------------------
-L1.n              0.3118      0.6357     0.490     0.624
-L2.n             -0.0445      0.1825    -0.244     0.807
-w                -1.2939      0.8251    -1.568     0.117
-k                 0.3698      0.1580     2.340     0.019  **
+L1.n              0.0769      0.1461     0.526     0.599
+L2.n              0.0171      0.0576     0.297     0.767
+w                -1.6588      0.6870    -2.415     0.016  **
+k                 0.4051      0.1173     3.454     0.001  ***
 ------------------------------------------------------------------------------
 instruments: 7
-Hansen J: chi2(3) = 3.256, p = 0.354
-AR(1): z = -3.079, p = 0.002
-AR(2): z = -0.733, p = 0.464
+Hansen J: chi2(3) = 2.089, p = 0.554
+AR(1) [approximate]: z = -1.977, p = 0.048
+AR(2) [approximate]: z = -0.529, p = 0.597
 ==============================================================================
 ```
 

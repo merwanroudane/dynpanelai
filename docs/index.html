@@ -233,6 +233,7 @@ footer{background:#F7F9FC; border-top:1px solid var(--line); padding:52px 0 34px
       <a href="#methods">Methods</a>
       <a href="#theory">Theory</a>
       <a href="#results">Results</a>
+      <a href="#limits">Limitations</a>
       <a href="#guide">Guide</a>
       <a href="#data">Data</a>
     </div>
@@ -350,8 +351,9 @@ footer{background:#F7F9FC; border-top:1px solid var(--line); padding:52px 0 34px
     <div class="grid g2" style="margin-top:30px">
       <div class="card t-blue">
         <span class="chip c-blue">dynpanelai.gmm</span>
-        <h3>Difference &amp; system GMM</h3>
-        <p>Arellano–Bond and Blundell–Bond, plus Anderson–Hsiao. One-step, two-step with the Windmeijer correction, and iterative. FD and FOD transforms, collapsible instruments, Hansen J and AR(1)/AR(2) tests.</p>
+        <h3>Difference GMM</h3>
+        <p>Arellano–Bond plus Anderson–Hsiao. One-step and two-step with the Windmeijer correction, FD and FOD transforms, genuinely collapsible instruments (55&nbsp;→&nbsp;15 on the employment panel), time dummies, Hansen J and approximate AR(1)/AR(2).</p>
+        <p style="font-size:.88rem"><b>System GMM is disabled in this release</b> — see Known limitations below.</p>
         <p><b>Use when:</b> <em>T</em> is short and controls are low-dimensional. Handles unbalanced panels.</p>
         <p style="font-size:.83rem;color:var(--muted)">Arellano &amp; Bond (1991) · Blundell &amp; Bond (1998) · Windmeijer (2005)</p>
       </div>
@@ -483,7 +485,7 @@ footer{background:#F7F9FC; border-top:1px solid var(--line); padding:52px 0 34px
       <div class="stat"><div class="v" style="color:var(--teal)">96.7%</div><div class="l">AB-LASSO CI coverage at T=14</div></div>
       <div class="stat"><div class="v" style="color:var(--coral)">0%</div><div class="l">Fixed-effects coverage, same design</div></div>
       <div class="stat"><div class="v" style="color:var(--blue)">0.955</div><div class="l">AC-GATE lag recovery (Spearman)</div></div>
-      <div class="stat"><div class="v" style="color:var(--gold)">31</div><div class="l">Tests passing</div></div>
+      <div class="stat"><div class="v" style="color:var(--gold)">48</div><div class="l">Tests passing</div></div>
     </div>
 
     <h3 style="margin-top:38px">Estimator comparison on real data</h3>
@@ -494,17 +496,17 @@ footer{background:#F7F9FC; border-top:1px solid var(--line); padding:52px 0 34px
         <caption>Dependent variable: log employment. Standard errors in parentheses, clustered by firm. *** p&lt;0.01, ** p&lt;0.05, * p&lt;0.10.</caption>
         <thead><tr>
           <th>Coefficient</th><th class="num">Fixed effects</th><th class="num">Debiased FE</th>
-          <th class="num">Anderson–Hsiao</th><th class="num">Difference GMM</th>
+          <th class="num">Anderson–Hsiao</th><th class="num">Diff GMM (collapsed)</th>
         </tr></thead>
         <tbody>
-          <tr><td><b>L1.n</b></td><td class="num">0.6279***</td><td class="num">0.7628***</td><td class="num">1.0936***</td><td class="num">0.3118</td></tr>
-          <tr><td class="se">&nbsp;</td><td class="num se">(0.0972)</td><td class="num se">(0.0972)</td><td class="num se">(0.2424)</td><td class="num se">(0.6357)</td></tr>
-          <tr><td><b>L2.n</b></td><td class="num">−0.1869**</td><td class="num">−0.2770***</td><td class="num">—</td><td class="num">−0.0445</td></tr>
-          <tr><td class="se">&nbsp;</td><td class="num se">(0.0940)</td><td class="num se">(0.0940)</td><td class="num se">—</td><td class="num se">(0.1825)</td></tr>
-          <tr><td><b>w</b> (log wage)</td><td class="num">−0.4344***</td><td class="num">−0.4100***</td><td class="num">−0.5566**</td><td class="num">−1.2939</td></tr>
-          <tr><td class="se">&nbsp;</td><td class="num se">(0.1235)</td><td class="num se">(0.1235)</td><td class="num se">(0.2571)</td><td class="num se">(0.8251)</td></tr>
-          <tr><td><b>k</b> (log capital)</td><td class="num">0.3904***</td><td class="num">0.3623***</td><td class="num">0.1354*</td><td class="num">0.3698**</td></tr>
-          <tr><td class="se">&nbsp;</td><td class="num se">(0.0427)</td><td class="num se">(0.0427)</td><td class="num se">(0.0812)</td><td class="num se">(0.1580)</td></tr>
+          <tr><td><b>L1.n</b></td><td class="num">0.6279***</td><td class="num">0.7628***</td><td class="num">1.0936***</td><td class="num">0.0769</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.0972)</td><td class="num se">(0.0972)</td><td class="num se">(0.2424)</td><td class="num se">(0.1461)</td></tr>
+          <tr><td><b>L2.n</b></td><td class="num">−0.1869**</td><td class="num">−0.2770***</td><td class="num">—</td><td class="num">0.0171</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.0940)</td><td class="num se">(0.0940)</td><td class="num se">—</td><td class="num se">(0.0576)</td></tr>
+          <tr><td><b>w</b> (log wage)</td><td class="num">−0.4344***</td><td class="num">−0.4100***</td><td class="num">−0.5566**</td><td class="num">−1.6588**</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.1235)</td><td class="num se">(0.1235)</td><td class="num se">(0.2571)</td><td class="num se">(0.6870)</td></tr>
+          <tr><td><b>k</b> (log capital)</td><td class="num">0.3904***</td><td class="num">0.3623***</td><td class="num">0.1354*</td><td class="num">0.4051***</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.0427)</td><td class="num se">(0.0427)</td><td class="num se">(0.0812)</td><td class="num se">(0.1173)</td></tr>
           <tr style="border-top:2px solid var(--line)"><td>Observations</td><td class="num">751</td><td class="num">751</td><td class="num">751</td><td class="num">611</td></tr>
           <tr><td>Firms</td><td class="num">140</td><td class="num">140</td><td class="num">140</td><td class="num">140</td></tr>
         </tbody>
@@ -547,6 +549,36 @@ footer{background:#F7F9FC; border-top:1px solid var(--line); padding:52px 0 34px
       <img src="assets/fig_acgate.svg" alt="Heatmap of learned lag weights and scatter of recovered versus true effective lags">
       <figcaption><b>Figure 4.</b> AC-GATE learns an entity-specific lag distribution $\omega_{i,k}$ from observable proxies, and recovers the true effective lag with Spearman <b>0.955</b> on synthetic data with known ground truth. The L1 guard rejects degenerate solutions where every entity gets the same lag; the L2 permutation test checks alignment against pre-specified stratifiers.</figcaption>
     </figure>
+  </div>
+</section>
+
+
+<!-- ================= LIMITATIONS ================= -->
+<section id="limits">
+  <div class="wrap">
+    <div class="eyebrow">Honest reporting</div>
+    <h2>Known limitations</h2>
+    <p class="lead">What this package does <em>not</em> yet do reliably. Published here rather than buried, because a silently wrong estimator is worse than a missing one.</p>
+
+    <div class="grid g2" style="margin-top:26px">
+      <div class="card t-coral">
+        <span class="chip c-coral">Disabled</span>
+        <h3><code>system_gmm()</code> raises</h3>
+        <p>The level-equation instrument block is implemented — stacked equations, block-diagonal <em>Z</em>, lagged differences plus a constant — but it does not validate. On a mean-stationary simulated panel where the extra moment conditions hold <em>by construction</em>, Hansen rejects at $p&lt;0.001$ and the autoregressive coefficient comes back <b>0.34</b> against a true <b>0.75</b>.</p>
+        <p>That pattern points at the instrument construction, not the data. The public entry point therefore raises <code>NotImplementedError</code> rather than return plausible-looking numbers under a "System GMM" label.</p>
+        <p><b>Use instead:</b> <code>diff_gmm(..., collapse=True)</code>, which recovers <b>0.778</b> on the same design.</p>
+      </div>
+      <div class="card t-gold">
+        <span class="chip c-gold">Approximate</span>
+        <h3>AR(1) / AR(2) diagnostics</h3>
+        <p>Reported as <code>[approximate]</code>. They are a simplified m-test based on the within-unit correlation of residuals with their own lag, and do not net out the effect of parameter estimation on the variance.</p>
+        <p>Directionally reliable — AR(1) should reject and AR(2) should not — but not a substitute for the exact Arellano–Bond statistic when the test is close to a decision boundary.</p>
+      </div>
+    </div>
+
+    <div class="note n-teal" style="margin-top:22px">
+      <p><b>Why this section exists.</b> Version 0.1.0 shipped <code>collapse</code>, <code>time_dummies</code> and <code>level</code> as silent no-ops: accepted, documented, and completely inert. The tests passed because they only checked that calls returned plausible numbers. Version 0.1.1 fixes all three and adds 17 tests that assert each option's <em>structural</em> consequence — instrument counts, stacked rows, block-diagonality — not merely that the call succeeds.</p>
+    </div>
   </div>
 </section>
 
@@ -697,7 +729,7 @@ m = panel.T * (panel.T - <span class="n">1</span>) // <span class="n">2</span>
              Dynamic Panel Data Models},
   year    = {2026},
   url     = {https://github.com/merwanroudane/dynpanelai},
-  version = {0.1.0}
+  version = {0.1.1}
 }</code></pre>
   </div>
 </section>

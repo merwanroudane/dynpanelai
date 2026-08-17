@@ -73,6 +73,10 @@ apply to Arellano–Bond, giving the DAB estimator.
 **Kiviet/Bruno.** A closed-form expansion of the bias, evaluated at a consistent
 initial estimator.
 
+> **Implementation note.** System GMM is disabled in `dynpanelai` 0.1.1: the
+> level-equation instrument block does not validate against a design where the
+> extra moments hold by construction. Use `diff_gmm(collapse=True)`.
+
 ---
 
 ## 3. Arellano–Bond LASSO (`ablasso`)
