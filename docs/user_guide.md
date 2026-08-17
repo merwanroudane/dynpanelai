@@ -176,7 +176,8 @@ Every estimator follows the same shape. Two equivalent styles:
 
 ```python
 # Functional
-res = dp.diff_gmm(panel, y="n", lags=2, predetermined=["w"], exogenous=["k"])
+res = dp.diff_gmm(panel, y="n", lags=2, predetermined=["w"],
+                  exogenous=["k"], collapse=True)
 
 # Object-oriented — reusable, inspectable
 est = dp.DynamicPanelGMM(y="n", lags=2, predetermined=["w"], exogenous=["k"])
@@ -206,20 +207,20 @@ print(res.summary())
 
 ```
 ==============================================================================
-Difference GMM (2-step, FD)
+Difference GMM (2-step, FD, collapsed)
 Dependent variable: n
 Observations = 611   Units = 140   Periods = 9
 ------------------------------------------------------------------------------
                     coef    std.err.         z     P>|z|
 ------------------------------------------------------------------------------
-L1.n              0.3118      0.6357     0.490     0.624
-w                -1.2939      0.8251    -1.568     0.117
-k                 0.3698      0.1580     2.340     0.019  **
+L1.n              0.0769      0.1461     0.526     0.599
+w                -1.6588      0.6870    -2.415     0.016  **
+k                 0.4051      0.1173     3.454     0.001  ***
 ------------------------------------------------------------------------------
 instruments: 7
-Hansen J: chi2(3) = 3.256, p = 0.354
-AR(1): z = -3.079, p = 0.002
-AR(2): z = -0.733, p = 0.464
+Hansen J: chi2(3) = 2.089, p = 0.554
+AR(1) [approximate]: z = -1.977, p = 0.048
+AR(2) [approximate]: z = -0.529, p = 0.597
 ==============================================================================
 ```
 
@@ -439,6 +440,9 @@ effective lag, and L2 tests alignment against a permutation null.
 ---
 
 ## Common mistakes
+
+**Calling `system_gmm()`.** It raises in this release; the level-equation
+instruments do not validate. Use `diff_gmm(collapse=True)`.
 
 **Using DML on a short panel.** `sqrt(N)/T` must go to zero. At `T = 9` it
 does not. The estimator warns you; heed it.
