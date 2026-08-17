@@ -71,10 +71,11 @@ this unbalanced panel.
 
 ### 2. Windmeijer's score was evaluated at the wrong residuals
 
-$$D_{\cdot j} = -M X'ZW rac{\partial \widehat S}{\partialeta_j} W
-\sum_i Z_i'\widehat u_i.$$
+```
+D[:, j] = -M X'Z W  (dS/dbeta_j)  W  sum_i Z_i' u_i(beta_2)
+```
 
-The score \(\sum_i Z_i'\widehat u_i\) is evaluated at the **second-step**
+The score `sum_i Z_i' u_i` is evaluated at the **second-step**
 estimate; only \(\partial\widehat S/\partialeta_j\) uses first-step
 residuals, since it is the first step that produced the weight matrix being
 differentiated. The implementation used first-step residuals in both places.
