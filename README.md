@@ -1,5 +1,9 @@
 # dynpanelai
 
+[![PyPI version](https://img.shields.io/pypi/v/dynpanelai.svg)](https://pypi.org/project/dynpanelai/)
+[![Python versions](https://img.shields.io/pypi/pyversions/dynpanelai.svg)](https://pypi.org/project/dynpanelai/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **Machine learning and modern inference for dynamic panel data models.**
 
 A unified Python implementation of seven methodologies for dynamic panels with
