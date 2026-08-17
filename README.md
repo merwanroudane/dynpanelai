@@ -80,15 +80,15 @@ Observations = 611   Units = 140   Periods = 9
 ------------------------------------------------------------------------------
                     coef    std.err.         z     P>|z|
 ------------------------------------------------------------------------------
-L1.n              0.0769      0.1461     0.526     0.599
-L2.n              0.0171      0.0576     0.297     0.767
-w                -1.6588      0.6870    -2.415     0.016  **
-k                 0.4051      0.1173     3.454     0.001  ***
+L1.n              0.0769      0.4326     0.178     0.859
+L2.n              0.0171      0.1493     0.115     0.909
+w                -1.6588      0.7026    -2.361     0.018  **
+k                 0.4051      0.0823     4.922     0.000  ***
 ------------------------------------------------------------------------------
 instruments: 7
-Hansen J: chi2(3) = 2.089, p = 0.554
-AR(1) [approximate]: z = -1.977, p = 0.048
-AR(2) [approximate]: z = -0.529, p = 0.597
+Hansen J: chi2(3) = 2.092, p = 0.554
+AR(1) [approximate]: z = -1.973, p = 0.048
+AR(2) [approximate]: z = -0.528, p = 0.597
 ==============================================================================
 ```
 
@@ -101,12 +101,11 @@ AR(2) [approximate]: z = -0.529, p = 0.597
   where the extra moments hold by construction, Hansen rejects at p<0.001 and
   the AR coefficient comes back 0.34 against a true 0.75. Use
   `diff_gmm(..., collapse=True)`, which recovers 0.778 on the same design.
-- **Standard errors are not yet validated.** Cross-checked against `xtabond2`
-  ([full comparison](validation/RESULTS.md)): the instrument matrix, sample
-  dimensions and Hansen degrees of freedom match exactly, and coefficients
-  agree to about ±0.02 — but standard errors are off by factors of 0.4× to 3×.
-  The Windmeijer correction is the prime suspect. **Do not rely on the
-  reported inference until 0.1.2.**
+- **Difference GMM is cross-validated against `xtabond2`**
+  ([full comparison](validation/RESULTS.md)): instrument counts, sample
+  dimensions and Hansen degrees of freedom match exactly; coefficients agree
+  to about ±0.02 and standard errors to within 2–9%. The residual gap is
+  concentrated in `w` (≈9%) and is not yet fully explained.
 - **AR(1)/AR(2) are labelled `[approximate]`.** They are a simplified m-test
   that does not net out parameter-estimation error. Directionally reliable,
   not a substitute for the exact Arellano-Bond statistic.

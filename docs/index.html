@@ -500,13 +500,13 @@ footer{background:#F7F9FC; border-top:1px solid var(--line); padding:52px 0 34px
         </tr></thead>
         <tbody>
           <tr><td><b>L1.n</b></td><td class="num">0.6279***</td><td class="num">0.7628***</td><td class="num">1.0936***</td><td class="num">0.0769</td></tr>
-          <tr><td class="se">&nbsp;</td><td class="num se">(0.0972)</td><td class="num se">(0.0972)</td><td class="num se">(0.2424)</td><td class="num se">(0.1461)</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.0972)</td><td class="num se">(0.0972)</td><td class="num se">(0.2424)</td><td class="num se">(0.4326)</td></tr>
           <tr><td><b>L2.n</b></td><td class="num">−0.1869**</td><td class="num">−0.2770***</td><td class="num">—</td><td class="num">0.0171</td></tr>
-          <tr><td class="se">&nbsp;</td><td class="num se">(0.0940)</td><td class="num se">(0.0940)</td><td class="num se">—</td><td class="num se">(0.0576)</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.0940)</td><td class="num se">(0.0940)</td><td class="num se">—</td><td class="num se">(0.1493)</td></tr>
           <tr><td><b>w</b> (log wage)</td><td class="num">−0.4344***</td><td class="num">−0.4100***</td><td class="num">−0.5566**</td><td class="num">−1.6588**</td></tr>
-          <tr><td class="se">&nbsp;</td><td class="num se">(0.1235)</td><td class="num se">(0.1235)</td><td class="num se">(0.2571)</td><td class="num se">(0.6870)</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.1235)</td><td class="num se">(0.1235)</td><td class="num se">(0.2571)</td><td class="num se">(0.7026)</td></tr>
           <tr><td><b>k</b> (log capital)</td><td class="num">0.3904***</td><td class="num">0.3623***</td><td class="num">0.1354*</td><td class="num">0.4051***</td></tr>
-          <tr><td class="se">&nbsp;</td><td class="num se">(0.0427)</td><td class="num se">(0.0427)</td><td class="num se">(0.0812)</td><td class="num se">(0.1173)</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.0427)</td><td class="num se">(0.0427)</td><td class="num se">(0.0812)</td><td class="num se">(0.0823)</td></tr>
           <tr style="border-top:2px solid var(--line)"><td>Observations</td><td class="num">751</td><td class="num">751</td><td class="num">751</td><td class="num">611</td></tr>
           <tr><td>Firms</td><td class="num">140</td><td class="num">140</td><td class="num">140</td><td class="num">140</td></tr>
         </tbody>
@@ -568,11 +568,18 @@ footer{background:#F7F9FC; border-top:1px solid var(--line); padding:52px 0 34px
         <p>That pattern points at the instrument construction, not the data. The public entry point therefore raises <code>NotImplementedError</code> rather than return plausible-looking numbers under a "System GMM" label.</p>
         <p><b>Use instead:</b> <code>diff_gmm(..., collapse=True)</code>, which recovers <b>0.778</b> on the same design.</p>
       </div>
+      <div class="card t-sage">
+        <span class="chip c-sage">Cross-validated</span>
+        <h3>Difference GMM matches <code>xtabond2</code></h3>
+        <p>Checked against <code>xtabond2</code> 3.7.2 on <code>webuse abdata</code>: instrument counts (7 collapsed, 35 uncollapsed), observations, groups and Hansen degrees of freedom all match <b>exactly</b>. Coefficients agree to ±0.02 and standard errors to within 2% on three of four parameters.</p>
+        <p>One gap remains: <code>se(w)</code> runs about 7–9% below the reference, at one step as well as two — so it lies in the base variance, not the Windmeijer correction. <a href="https://github.com/merwanroudane/dynpanelai/blob/main/validation/RESULTS.md">Full comparison</a>.</p>
+      </div>
+
       <div class="card t-gold">
         <span class="chip c-gold">Approximate</span>
         <h3>AR(1) / AR(2) diagnostics</h3>
         <p>Reported as <code>[approximate]</code>. They are a simplified m-test based on the within-unit correlation of residuals with their own lag, and do not net out the effect of parameter estimation on the variance.</p>
-        <p>Directionally reliable — AR(1) should reject and AR(2) should not — but not a substitute for the exact Arellano–Bond statistic when the test is close to a decision boundary.</p>
+        <p>Directionally reliable — AR(1) should reject and AR(2) should not — but not a substitute for the exact statistic near a decision boundary. On the employment panel it returns $p=0.048$ where <code>xtabond2</code> returns $0.141$: the same direction, opposite verdict at 5%.</p>
       </div>
     </div>
 
