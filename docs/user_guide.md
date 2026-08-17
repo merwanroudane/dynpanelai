@@ -258,18 +258,18 @@ results = {
     "FE":       dp.fixed_effects(panel, "n", lags=2, x=["w", "k"]),
     "DFE-A":    dp.debiased_fe(panel, "n", lags=2, x=["w", "k"]),
     "AH":       dp.anderson_hsiao(panel, "n", lags=1, exogenous=["w", "k"]),
-    "Diff GMM": dp.diff_gmm(panel, "n", lags=2,
-                            predetermined=["w"], exogenous=["k"]),
+    "Diff GMM": dp.diff_gmm(panel, "n", lags=2, predetermined=["w"],
+                            exogenous=["k"], collapse=True),
 }
 print(dp.comparison_table(results, params=["L1.n", "L2.n", "w", "k"]))
 ```
 
 ```
                        FE       DFE-A          AH    Diff GMM
-L1.n            0.6279***   0.7628***   1.0936***     0.3118
-  (L1.n)         (0.0972)    (0.0972)    (0.2424)    (0.6357)
-w              -0.4344***  -0.4100***   -0.5566**    -1.2939
-  (w)            (0.1235)    (0.1235)    (0.2571)    (0.8251)
+L1.n            0.6279***   0.7628***   1.0936***      0.0769
+  (L1.n)         (0.0972)    (0.0972)    (0.2424)    (0.1461)
+w              -0.4344***  -0.4100***   -0.5566**   -1.6588**
+  (w)            (0.1235)    (0.1235)    (0.2571)    (0.6870)
 Observations          751         751         751         611
 Units                 140         140         140         140
 ```
