@@ -53,8 +53,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/merwanroudane/dynpanelai"
+Homepage = "https://merwanroudane.github.io/dynpanelai/"
+Documentation = "https://merwanroudane.github.io/dynpanelai/"
 Repository = "https://github.com/merwanroudane/dynpanelai"
+Changelog = "https://github.com/merwanroudane/dynpanelai/blob/main/CHANGELOG.md"
 Issues = "https://github.com/merwanroudane/dynpanelai/issues"
 
 [tool.setuptools.packages.find]

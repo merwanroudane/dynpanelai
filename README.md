@@ -18,6 +18,8 @@
 | 📑 Syntax reference | [docs/syntax_reference.md](docs/syntax_reference.md) |
 | 🧮 Methods & theory | [docs/methods.md](docs/methods.md) |
 | ▶️ Examples | [examples/](examples/) |
+| 📝 Changelog | [CHANGELOG.md](CHANGELOG.md) |
+| ✅ Stata validation | [validation/RESULTS.md](validation/RESULTS.md) |
 
 ---
 
