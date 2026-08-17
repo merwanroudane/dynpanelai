@@ -54,8 +54,13 @@ Reference: StataNow 19.5 MP · `xtabond2` 3.7.2 (Roodman) · `webuse abdata`
 The efficient one-step weight is **not** `(Z'Z)^{-1}`. First-differencing
 induces an MA(1) error, so the kernel must be
 
-$$H = egin{pmatrix} 2 & -1 & & \ -1 & 2 & -1 & \ & \ddots & \ddots & \ddots \end{pmatrix},
-\qquad W_1 = \Bigl(\sum_i Z_i' H Z_i\Bigr)^{-1}.$$
+```
+H = [ 2  -1   0  ... ]
+    [-1   2  -1  ... ]
+    [ 0  -1   2  ... ]
+
+W1 = ( sum_i  Z_i' H Z_i )^{-1}
+```
 
 Using `H = I` is not merely inefficient — it changes the point estimate,
 the standard errors *and* the Hansen statistic, and it does so unevenly across
@@ -76,7 +81,7 @@ D[:, j] = -M X'Z W  (dS/dbeta_j)  W  sum_i Z_i' u_i(beta_2)
 ```
 
 The score `sum_i Z_i' u_i` is evaluated at the **second-step**
-estimate; only \(\partial\widehat S/\partialeta_j\) uses first-step
+estimate; only `dS/dbeta_j` uses first-step
 residuals, since it is the first step that produced the weight matrix being
 differentiated. The implementation used first-step residuals in both places.
 
