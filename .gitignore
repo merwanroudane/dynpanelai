@@ -1,0 +1,36 @@
+# Reference literature and third-party source archives (copyrighted, not redistributable)
+_references/
+*.pdf
+*.zip
+*.tar.gz
+*.rda
+*.RData
+*.dat
+
+# Large raw data (fetched by dynpanelai.datasets on demand)
+dynpanelai/datasets/_cache/
+data/raw/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Outputs
+outputs/
+*.aux
+*.log
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

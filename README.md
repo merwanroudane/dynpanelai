@@ -1,0 +1,191 @@
+# dynpanelai
+
+**Machine learning and modern inference for dynamic panel data models.**
+
+A unified Python implementation of seven methodologies for dynamic panels with
+high-dimensional controls — classical GMM, bias corrections, LASSO-based
+moment selection, double machine learning, orthogonal/debiased Lasso, optimal
+shrinkage, and neural lag discovery — behind one data container, one results
+object, and one publication-quality reporting layer.
+
+```bash
+pip install dynpanelai
+```
+
+---
+
+## Why this package
+
+Dynamic panel models face a specific tension. Fixed effects are essential for
+persistent heterogeneity, but they interact with the lagged dependent variable
+to produce the Nickell bias. The classical fix — instrument with lagged
+levels — generates a number of moment conditions that grows like `T²`, which
+reintroduces bias through overfitting. And modern applications add hundreds of
+controls, where naive post-LASSO inference is simply invalid.
+
+Each module here solves one part of that problem, and they share enough
+infrastructure that you can run all of them on the same panel and compare.
+
+| Module | Method | Source |
+|---|---|---|
+| `gmm` | Difference / system GMM, Anderson–Hsiao | Arellano & Bond (1991); Blundell & Bond (1998) |
+| `biascorr` | Analytical, split-panel, Kiviet bias corrections | Hahn & Kuersteiner (2002); Dhaene & Jochmans (2015) |
+| `ablasso` | Arellano–Bond LASSO moment selection | Chernozhukov, Fernández-Val, Huang & Wang (2024) |
+| `dml` | Double ML, blocked-time cross-fitting | Sneller (2026) |
+| `ortho` | Orthogonal + debiased Lasso for high-dimensional CATE | Semenova, Goldman, Chernozhukov & Taddy (2023) |
+| `hdpanel` | Uniform inference, weakly sparse fixed effects | Kock & Tang (2019) |
+| `shrink` | URE / Empirical Bayes shrinkage, penalised-FE forecasting | Kwon (2026); Cornejo & Sosa-Escudero (2026) |
+| `neural` | AC-GATE entity-conditioned lag discovery + audit | Xu (2026) |
+
+---
+
+## Quick start
+
+```python
+import dynpanelai as dp
+
+df = dp.datasets.load_abond_employment()          # 140 UK firms x 9 years
+panel = dp.PanelData(df, unit="id", time="year")
+
+res = dp.diff_gmm(panel, y="n", lags=2,
+                  predetermined=["w"], exogenous=["k"],
+                  gmm_lags=(2, 4), steps=2)
+print(res.summary())
+```
+
+```
+==============================================================================
+Difference GMM (2-step, FD)
+Dependent variable: n
+Observations = 611   Units = 140   Periods = 9
+------------------------------------------------------------------------------
+                    coef    std.err.         z     P>|z|
+------------------------------------------------------------------------------
+L1.n              0.3118      0.6357     0.490     0.624
+L2.n             -0.0445      0.1825    -0.244     0.807
+w                -1.2939      0.8251    -1.568     0.117
+k                 0.3698      0.1580     2.340     0.019  **
+------------------------------------------------------------------------------
+instruments: 7
+Hansen J: chi2(3) = 3.256, p = 0.354
+AR(1): z = -3.079, p = 0.002
+AR(2): z = -0.733, p = 0.464
+==============================================================================
+```
+
+---
+
+## Which method should I use?
+
+Start from the shape of your panel, not from the method you have heard of.
+
+```
+Is T short (under ~15)?
+├── Yes → gmm.diff_gmm / gmm.system_gmm, or biascorr.*
+│         The ML estimators need sqrt(N)/T → 0 and will mislead you here.
+└── No  → Do you have many controls, or nonlinear ones?
+          ├── No  → Is m²/(NT) large?  (many moment conditions)
+          │         ├── Yes → ablasso.ABLasso
+          │         └── No  → gmm.diff_gmm
+          └── Yes → What do you want to learn?
+                    ├── One treatment effect       → dml.DMLDynamicPanel
+                    ├── Effects across many groups → ortho.OrthogonalLasso
+                    ├── All coefficients, uniformly → hdpanel.PanelLasso
+                    ├── A forecast                 → shrink.PenalizedFE
+                    └── Who responds over what horizon → neural.ACGate
+```
+
+Every estimator warns you when you are outside its assumptions — for example
+`DMLDynamicPanel` reports `sqrt(N)/T` and warns when it exceeds 1, and
+`PanelLasso` warns when the weak-sparsity assumption looks violated.
+
+---
+
+## Comparing estimators
+
+The comparison table is the point of a unified package:
+
+```python
+res = {
+    "FE":      dp.fixed_effects(panel, "n", lags=2, x=["w", "k"]),
+    "DFE-A":   dp.debiased_fe(panel, "n", lags=2, x=["w", "k"]),
+    "AH":      dp.anderson_hsiao(panel, "n", lags=1, exogenous=["w", "k"]),
+    "Diff GMM": dp.diff_gmm(panel, "n", lags=2,
+                            predetermined=["w"], exogenous=["k"]),
+}
+print(dp.comparison_table(res, params=["L1.n", "L2.n", "w", "k"]))
+print(dp.comparison_to_latex(res, caption="Employment dynamics"))
+```
+
+Long-run effects with delta-method standard errors come for free:
+
+```python
+lr, se = res["Diff GMM"].long_run("w", ["L1.n", "L2.n"])
+```
+
+---
+
+## Bundled real data
+
+| Dataset | Shape | Use |
+|---|---|---|
+| `load_covid_counties()` | 2,510 US counties × 32 weeks | AB-LASSO application: school openings and COVID-19 spread |
+| `load_abond_employment()` | 140 UK firms × 9 years | The canonical Arellano–Bond GMM panel |
+
+Both load as tidy long-format frames, ready for `PanelData`.
+
+---
+
+## Documentation
+
+- [`docs/user_guide.md`](docs/user_guide.md) — step-by-step, from a CSV to a
+  finished table
+- [`docs/syntax_reference.md`](docs/syntax_reference.md) — every estimator,
+  every argument
+- [`docs/methods.md`](docs/methods.md) — the econometrics behind each module
+- [`examples/`](examples/) — runnable scripts reproducing each paper's headline
+  exercise
+
+---
+
+## Installation
+
+```bash
+pip install dynpanelai              # core
+pip install dynpanelai[plots]       # + matplotlib figures
+pip install dynpanelai[neural]      # + PyTorch, for AC-GATE
+pip install dynpanelai[all]         # everything
+```
+
+From source:
+
+```bash
+git clone https://github.com/merwanroudane/dynpanelai.git
+cd dynpanelai
+pip install -e ".[dev]"
+pytest
+```
+
+---
+
+## Citation
+
+```bibtex
+@software{roudane_dynpanelai_2026,
+  author  = {Roudane, Merwan},
+  title   = {dynpanelai: Machine Learning and Modern Inference for
+             Dynamic Panel Data Models},
+  year    = {2026},
+  url     = {https://github.com/merwanroudane/dynpanelai},
+  version = {0.1.0}
+}
+```
+
+Please also cite the paper behind whichever estimator you use; each module
+docstring gives the full reference.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
