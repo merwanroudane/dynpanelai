@@ -1,10 +1,25 @@
 # dynpanelai
 
+[![Docs](https://img.shields.io/badge/docs-website-2A9D8F?style=flat-square)](https://merwanroudane.github.io/dynpanelai/)
 [![PyPI version](https://img.shields.io/pypi/v/dynpanelai.svg)](https://pypi.org/project/dynpanelai/)
 [![Python versions](https://img.shields.io/pypi/pyversions/dynpanelai.svg)](https://pypi.org/project/dynpanelai/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **Machine learning and modern inference for dynamic panel data models.**
+
+### 🔗 Links
+
+| | |
+|---|---|
+| 📘 **Documentation site** | **https://merwanroudane.github.io/dynpanelai/** |
+| 📦 **PyPI package** | **https://pypi.org/project/dynpanelai/** |
+| 💻 Source | https://github.com/merwanroudane/dynpanelai |
+| 📖 User guide | [docs/user_guide.md](docs/user_guide.md) |
+| 📑 Syntax reference | [docs/syntax_reference.md](docs/syntax_reference.md) |
+| 🧮 Methods & theory | [docs/methods.md](docs/methods.md) |
+| ▶️ Examples | [examples/](examples/) |
+
+---
 
 A unified Python implementation of seven methodologies for dynamic panels with
 high-dimensional controls — classical GMM, bias corrections, LASSO-based

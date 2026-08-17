@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dynpanelai — Machine Learning for Dynamic Panel Data</title>
+<meta name="description" content="A unified Python library implementing eight methodologies for dynamic panel data models with high-dimensional controls: GMM, bias corrections, Arellano-Bond LASSO, double machine learning, orthogonal Lasso, shrinkage, and neural lag discovery.">
+<meta name="author" content="Dr Merwan Roudane">
+<meta property="og:title" content="dynpanelai">
+<meta property="og:description" content="Machine learning and modern inference for dynamic panel data models.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+:root{
+  --bg:#FDFCFA; --surface:#FFFFFF; --tint:#F5F7FA; --tint2:#EEF2F7;
+  --ink:#22223B; --body:#3F4459; --muted:#6B7286; --line:#E3E8EF;
+  --blue:#3D5A80; --blue-l:#E8EEF6;
+  --teal:#2A9D8F; --teal-l:#E3F4F1;
+  --coral:#E76F51; --coral-l:#FCEBE5;
+  --gold:#E9A93D; --gold-l:#FDF2DF;
+  --sage:#6E9E5E; --sage-l:#EAF3E6;
+  --lav:#8C6BC8; --lav-l:#F0EBFA;
+  --rose:#C9556F; --rose-l:#FBE9EE;
+  --radius:14px; --shadow:0 1px 2px rgba(34,34,59,.04), 0 8px 24px rgba(34,34,59,.06);
+  --shadow-lg:0 2px 4px rgba(34,34,59,.05), 0 18px 44px rgba(34,34,59,.10);
+  --maxw:1120px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:76px}
+body{
+  margin:0; background:var(--bg); color:var(--body);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16.5px; line-height:1.68; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:Fraunces,Georgia,serif; color:var(--ink); line-height:1.22; margin:0 0 .5em}
+h2{font-size:2.05rem; font-weight:600; letter-spacing:-.4px}
+h3{font-size:1.32rem; font-weight:600}
+h4{font-size:1.05rem; font-weight:600; font-family:Inter,sans-serif}
+p{margin:0 0 1.05em}
+a{color:var(--blue); text-decoration:none; border-bottom:1px solid rgba(61,90,128,.28); transition:.15s}
+a:hover{color:var(--coral); border-bottom-color:var(--coral)}
+code{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.875em;
+  background:var(--tint2); color:#31405A; padding:.14em .42em; border-radius:5px}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 26px}
+section{padding:74px 0; border-top:1px solid var(--line)}
+section:first-of-type{border-top:none}
+.lead{font-size:1.14rem; color:var(--muted); max-width:74ch}
+.eyebrow{font-size:.76rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--teal); margin-bottom:.65rem}
+
+/* ---------- nav ---------- */
+nav{position:sticky; top:0; z-index:60; background:rgba(253,252,250,.9);
+  backdrop-filter:blur(12px); border-bottom:1px solid var(--line)}
+.nav-in{max-width:var(--maxw); margin:0 auto; padding:11px 26px;
+  display:flex; align-items:center; gap:22px; flex-wrap:wrap}
+.brand{font-family:Fraunces,serif; font-weight:700; font-size:1.16rem; color:var(--ink);
+  border:none; display:flex; align-items:center; gap:9px}
+.brand:hover{color:var(--ink)}
+.dot{width:9px;height:9px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--gold))}
+.nav-links{display:flex; gap:19px; margin-left:auto; flex-wrap:wrap}
+.nav-links a{color:var(--muted); font-size:.9rem; font-weight:500; border:none}
+.nav-links a:hover{color:var(--teal)}
+.nav-cta{background:var(--ink); color:#fff !important; padding:6px 14px;
+  border-radius:8px; font-size:.86rem; font-weight:600; border:none}
+.nav-cta:hover{background:var(--blue)}
+
+/* ---------- hero ---------- */
+.hero{padding:76px 0 60px;
+  background:
+    radial-gradient(760px 380px at 12% -8%, var(--teal-l) 0%, transparent 62%),
+    radial-gradient(680px 340px at 88% 4%, var(--gold-l) 0%, transparent 60%),
+    radial-gradient(560px 300px at 55% 96%, var(--lav-l) 0%, transparent 62%);
+}
+.hero h1{font-size:3.5rem; font-weight:700; letter-spacing:-1.6px; margin-bottom:.2em}
+.hero .tag{font-size:1.28rem; color:var(--body); max-width:60ch; margin-bottom:1.5em}
+.grad{background:linear-gradient(100deg,var(--blue),var(--teal) 45%,var(--gold));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+.badges{display:flex; gap:9px; flex-wrap:wrap; margin-bottom:26px}
+.badges img{height:22px}
+.byline{display:flex; align-items:center; gap:12px; margin-top:30px;
+  padding-top:22px; border-top:1px solid var(--line); max-width:640px}
+.avatar{width:42px;height:42px;border-radius:50%; flex:none;
+  background:linear-gradient(135deg,var(--blue),var(--teal));
+  color:#fff; display:grid; place-items:center; font-weight:700; font-size:.95rem;
+  font-family:Inter,sans-serif}
+.byline .n{font-weight:600; color:var(--ink)}
+.byline .r{font-size:.87rem; color:var(--muted)}
+
+/* ---------- code ---------- */
+pre{background:#FBFCFE; border:1px solid var(--line); border-left:3px solid var(--teal);
+  border-radius:10px; padding:15px 17px; overflow-x:auto; margin:0 0 1.1em;
+  font-family:"JetBrains Mono",monospace; font-size:.845rem; line-height:1.62; color:#31405A}
+pre code{background:none; padding:0; color:inherit; font-size:1em}
+.k{color:var(--lav); font-weight:500}
+.s{color:var(--sage)}
+.c{color:#9AA1B1; font-style:italic}
+.n{color:var(--coral)}
+.f{color:var(--blue); font-weight:500}
+.install{display:flex; align-items:center; gap:12px; background:var(--ink); color:#F2F4F8;
+  border-radius:11px; padding:14px 18px; font-family:"JetBrains Mono",monospace;
+  font-size:.94rem; max-width:440px; box-shadow:var(--shadow)}
+.install .p{color:var(--teal)}
+.copy{margin-left:auto; background:rgba(255,255,255,.1); border:none; color:#C6CCDA;
+  padding:4px 10px; border-radius:6px; cursor:pointer; font-size:.76rem; font-family:Inter}
+.copy:hover{background:rgba(255,255,255,.2); color:#fff}
+
+/* ---------- cards ---------- */
+.grid{display:grid; gap:18px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(268px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(212px,1fr))}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:22px; box-shadow:var(--shadow); transition:.2s}
+.card:hover{box-shadow:var(--shadow-lg); transform:translateY(-2px)}
+.card h3{margin-bottom:.34em; font-size:1.16rem}
+.card p{font-size:.925rem; margin-bottom:.7em}
+.card p:last-child{margin-bottom:0}
+.chip{display:inline-block; font-size:.7rem; font-weight:700; letter-spacing:.05em;
+  text-transform:uppercase; padding:3px 9px; border-radius:20px; margin-bottom:11px}
+.c-blue{background:var(--blue-l); color:var(--blue)}
+.c-teal{background:var(--teal-l); color:var(--teal)}
+.c-coral{background:var(--coral-l); color:#C4512F}
+.c-gold{background:var(--gold-l); color:#B27A15}
+.c-sage{background:var(--sage-l); color:#4E7A3E}
+.c-lav{background:var(--lav-l); color:var(--lav)}
+.c-rose{background:var(--rose-l); color:var(--rose)}
+.t-blue{border-top:3px solid var(--blue)} .t-teal{border-top:3px solid var(--teal)}
+.t-coral{border-top:3px solid var(--coral)} .t-gold{border-top:3px solid var(--gold)}
+.t-sage{border-top:3px solid var(--sage)} .t-lav{border-top:3px solid var(--lav)}
+.t-rose{border-top:3px solid var(--rose)}
+.stat{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:19px; text-align:center; box-shadow:var(--shadow)}
+.stat .v{font-family:Fraunces,serif; font-size:2.1rem; font-weight:700; line-height:1.05}
+.stat .l{font-size:.83rem; color:var(--muted); margin-top:5px}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius);
+  background:var(--surface); box-shadow:var(--shadow); margin-bottom:1.3em}
+table{border-collapse:collapse; width:100%; font-size:.9rem; min-width:520px}
+thead th{background:linear-gradient(180deg,#F7F9FC,#F1F5FA); color:var(--ink);
+  font-weight:600; text-align:left; padding:12px 15px; border-bottom:2px solid var(--line);
+  font-size:.82rem; letter-spacing:.02em; white-space:nowrap}
+td{padding:11px 15px; border-bottom:1px solid #F0F3F7; vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#FAFCFE}
+td.num,th.num{text-align:right; font-family:"JetBrains Mono",monospace; font-size:.845rem}
+.se{color:var(--muted); font-size:.8rem}
+.best{background:var(--teal-l) !important; font-weight:600; color:#1D7268}
+.bad{color:var(--rose); font-weight:600}
+.good{color:var(--teal); font-weight:600}
+caption{caption-side:bottom; text-align:left; padding:11px 15px; font-size:.82rem;
+  color:var(--muted); border-top:1px solid var(--line); background:#FCFDFE}
+
+/* ---------- figures ---------- */
+figure{margin:0 0 22px; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--radius); padding:20px; box-shadow:var(--shadow)}
+figure img{width:100%; height:auto; display:block}
+figcaption{margin-top:14px; padding-top:13px; border-top:1px solid var(--line);
+  font-size:.87rem; color:var(--muted)}
+figcaption b{color:var(--ink)}
+
+/* ---------- callouts ---------- */
+.note{border-radius:11px; padding:16px 19px; margin:0 0 1.15em; font-size:.93rem}
+.note p:last-child{margin-bottom:0}
+.note b{color:var(--ink)}
+.n-teal{background:var(--teal-l); border-left:3px solid var(--teal)}
+.n-gold{background:var(--gold-l); border-left:3px solid var(--gold)}
+.n-coral{background:var(--coral-l); border-left:3px solid var(--coral)}
+.n-lav{background:var(--lav-l); border-left:3px solid var(--lav)}
+
+/* ---------- chooser ---------- */
+.chooser{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px; box-shadow:var(--shadow-lg)}
+.q{font-family:Fraunces,serif; font-size:1.2rem; color:var(--ink); margin-bottom:15px; font-weight:600}
+.opts{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px}
+.opt{background:var(--tint); border:1.5px solid var(--line); border-radius:9px;
+  padding:9px 16px; cursor:pointer; font-size:.92rem; font-weight:500; color:var(--body);
+  transition:.15s; font-family:Inter}
+.opt:hover{border-color:var(--teal); background:var(--teal-l); color:var(--teal)}
+.opt.sel{background:var(--teal); border-color:var(--teal); color:#fff}
+.answer{margin-top:19px; padding:19px; border-radius:11px; background:var(--blue-l);
+  border-left:3px solid var(--blue); display:none}
+.answer.show{display:block}
+.answer .rec{font-family:Fraunces,serif; font-size:1.3rem; color:var(--blue);
+  font-weight:700; margin-bottom:7px}
+.answer code{background:#fff}
+.steps{counter-reset:s; list-style:none; padding:0; margin:0}
+.steps li{counter-increment:s; position:relative; padding-left:44px; margin-bottom:26px}
+.steps li::before{content:counter(s); position:absolute; left:0; top:0;
+  width:30px;height:30px;border-radius:50%; background:linear-gradient(135deg,var(--blue),var(--teal));
+  color:#fff; display:grid; place-items:center; font-weight:700; font-size:.9rem;
+  font-family:Inter}
+.steps h4{margin-bottom:.35em}
+ul.tick{list-style:none; padding:0; margin:0 0 1em}
+ul.tick li{padding-left:25px; position:relative; margin-bottom:8px; font-size:.94rem}
+ul.tick li::before{content:"→"; position:absolute; left:0; color:var(--teal); font-weight:700}
+footer{background:#F7F9FC; border-top:1px solid var(--line); padding:52px 0 34px}
+.fgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:30px; margin-bottom:32px}
+.fgrid h4{font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.fgrid a{display:block; margin-bottom:8px; font-size:.92rem; border:none; color:var(--body)}
+.fgrid a:hover{color:var(--teal)}
+.fbot{border-top:1px solid var(--line); padding-top:22px; display:flex; gap:14px;
+  justify-content:space-between; flex-wrap:wrap; font-size:.87rem; color:var(--muted)}
+@media(max-width:720px){
+  .hero h1{font-size:2.45rem} h2{font-size:1.7rem}
+  section{padding:52px 0} .nav-links{display:none}
+  body{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <a href="#top" class="brand"><span class="dot"></span>dynpanelai</a>
+    <div class="nav-links">
+      <a href="#problem">Problem</a>
+      <a href="#choose">Choose a method</a>
+      <a href="#methods">Methods</a>
+      <a href="#theory">Theory</a>
+      <a href="#results">Results</a>
+      <a href="#guide">Guide</a>
+      <a href="#data">Data</a>
+    </div>
+    <a class="nav-cta" href="https://github.com/merwanroudane/dynpanelai">GitHub</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="eyebrow">Python · Econometrics · Open source</div>
+    <h1><span class="grad">dynpanelai</span></h1>
+    <p class="tag">Machine learning and modern inference for <b>dynamic panel data models</b> — eight published methodologies behind one interface.</p>
+
+    <div class="badges">
+      <a href="https://pypi.org/project/dynpanelai/"><img src="https://img.shields.io/pypi/v/dynpanelai.svg?style=flat-square&color=2A9D8F&label=PyPI" alt="PyPI"></a>
+      <a href="https://pypi.org/project/dynpanelai/"><img src="https://img.shields.io/pypi/pyversions/dynpanelai.svg?style=flat-square&color=3D5A80" alt="Python"></a>
+      <a href="https://github.com/merwanroudane/dynpanelai/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-E9A93D?style=flat-square" alt="MIT"></a>
+      <a href="https://github.com/merwanroudane/dynpanelai"><img src="https://img.shields.io/badge/tests-31%20passing-6E9E5E?style=flat-square" alt="tests"></a>
+    </div>
+
+    <div class="install">
+      <span class="p">$</span><span id="cmd">pip install dynpanelai</span>
+      <button class="copy" onclick="navigator.clipboard.writeText('pip install dynpanelai');this.textContent='Copied'">Copy</button>
+    </div>
+
+    <div class="byline">
+      <div class="avatar">MR</div>
+      <div>
+        <div class="n">Dr Merwan Roudane</div>
+        <div class="r">Author &amp; maintainer · Econometrics &amp; statistical software</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= PROBLEM ================= -->
+<section id="problem">
+  <div class="wrap">
+    <div class="eyebrow">The problem</div>
+    <h2>Why dynamic panels are hard</h2>
+    <p class="lead">Three difficulties compound. Each module in this package answers one of them.</p>
+
+    <div class="grid g3" style="margin:30px 0">
+      <div class="card t-coral">
+        <span class="chip c-coral">Difficulty 1</span>
+        <h3>Nickell bias</h3>
+        <p>Fixed effects are essential for persistent heterogeneity. But subtracting the unit mean also subtracts part of the error, so the demeaned lag and the demeaned error are mechanically correlated.</p>
+        <p>The bias is $O(1/T)$ and pushes $\hat\rho$ <b>downward</b>. It does not vanish as $N$ grows.</p>
+      </div>
+      <div class="card t-gold">
+        <span class="chip c-gold">Difficulty 2</span>
+        <h3>Instrument proliferation</h3>
+        <p>The classical fix instruments with lagged levels. But the number of moment conditions grows like $T^2$, and overfitting in the first stage reintroduces a bias of order $m/n$.</p>
+        <p>Valid inference needs $m^2/n \to 0$. In the COVID application that quantity is <b>≈ 168</b>.</p>
+      </div>
+      <div class="card t-lav">
+        <span class="chip c-lav">Difficulty 3</span>
+        <h3>High-dimensional controls</h3>
+        <p>Modern designs add hundreds of controls — text, transactions, policy indicators. Regularisation is then unavoidable, and it biases every coefficient.</p>
+        <p>Naive post-LASSO inference is <b>invalid</b>: shrinkage error enters the target estimator at first order.</p>
+      </div>
+    </div>
+
+    <div class="note n-teal">
+      <p><b>The unifying idea.</b> Orthogonalisation and sample splitting. Build a moment condition that is locally insensitive to nuisance error (Neyman-orthogonal), and estimate the nuisance on data independent of where you score it. Then first-order nuisance error disappears and slow-converging machine learners become admissible.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CHOOSER ================= -->
+<section id="choose" style="background:linear-gradient(180deg,#FBFCFE,var(--bg))">
+  <div class="wrap">
+    <div class="eyebrow">Decision support</div>
+    <h2>Which method should you use?</h2>
+    <p class="lead">Start from the shape of your panel, not from the method you have heard of. Answer three questions.</p>
+
+    <div class="chooser" style="margin-top:28px">
+      <div class="q">1 · How long is your time dimension <em>T</em>?</div>
+      <div class="opts" data-g="t">
+        <button class="opt" data-v="short">Short (T &lt; 15)</button>
+        <button class="opt" data-v="long">Long (T ≥ 15)</button>
+      </div>
+
+      <div class="q" style="margin-top:22px">2 · How many controls, and are they nonlinear?</div>
+      <div class="opts" data-g="p">
+        <button class="opt" data-v="few">Few, linear</button>
+        <button class="opt" data-v="many">Many or nonlinear</button>
+      </div>
+
+      <div class="q" style="margin-top:22px">3 · What do you actually want to learn?</div>
+      <div class="opts" data-g="goal">
+        <button class="opt" data-v="one">One treatment effect</button>
+        <button class="opt" data-v="het">Effects across groups</button>
+        <button class="opt" data-v="all">All coefficients</button>
+        <button class="opt" data-v="fcast">A forecast</button>
+        <button class="opt" data-v="lag">Who responds when</button>
+      </div>
+
+      <div class="answer" id="ans">
+        <div class="rec" id="rec"></div>
+        <p id="why" style="margin-bottom:.8em"></p>
+        <pre id="snip"></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= METHODS ================= -->
+<section id="methods">
+  <div class="wrap">
+    <div class="eyebrow">Coverage</div>
+    <h2>Eight methodologies, one interface</h2>
+    <p class="lead">Every estimator shares the same <code>PanelData</code> container and returns the same <code>PanelResults</code> object, so they can be run on one panel and tabled side by side.</p>
+
+    <div class="grid g2" style="margin-top:30px">
+      <div class="card t-blue">
+        <span class="chip c-blue">dynpanelai.gmm</span>
+        <h3>Difference &amp; system GMM</h3>
+        <p>Arellano–Bond and Blundell–Bond, plus Anderson–Hsiao. One-step, two-step with the Windmeijer correction, and iterative. FD and FOD transforms, collapsible instruments, Hansen J and AR(1)/AR(2) tests.</p>
+        <p><b>Use when:</b> <em>T</em> is short and controls are low-dimensional. Handles unbalanced panels.</p>
+        <p style="font-size:.83rem;color:var(--muted)">Arellano &amp; Bond (1991) · Blundell &amp; Bond (1998) · Windmeijer (2005)</p>
+      </div>
+
+      <div class="card t-teal">
+        <span class="chip c-teal">dynpanelai.biascorr</span>
+        <h3>Bias corrections</h3>
+        <p>Four ways to remove the leading $O(1/T)$ term without instruments: analytical (DFE-A), split-panel jackknife over time or the cross-section, half-panel jackknife, and Kiviet/Bruno corrected LSDV.</p>
+        <p><b>Use when:</b> you want the efficiency of the within estimator without its bias — or you want the DAB estimator.</p>
+        <p style="font-size:.83rem;color:var(--muted)">Hahn &amp; Kuersteiner (2002) · Dhaene &amp; Jochmans (2015) · Chen, Chernozhukov &amp; Fernández-Val (2019)</p>
+      </div>
+
+      <div class="card t-coral">
+        <span class="chip c-coral">dynpanelai.ablasso</span>
+        <h3>Arellano–Bond LASSO</h3>
+        <p>Selects the informative moment conditions by LASSO at each period, then estimates by <b>IV</b> — the only form whose moment function is Neyman-orthogonal to the first stage. Cross-sectional splitting with median aggregation over random splits.</p>
+        <p><b>Use when:</b> <em>T</em> is long and $m^2/n$ is large, so plain Arellano–Bond is biased.</p>
+        <p style="font-size:.83rem;color:var(--muted)">Chernozhukov, Fernández-Val, Huang &amp; Wang (2024)</p>
+      </div>
+
+      <div class="card t-gold">
+        <span class="chip c-gold">dynpanelai.dml</span>
+        <h3>Double machine learning</h3>
+        <p>Partialling-out with blocked-time cross-fitting and a separation buffer, so nuisance functions are never fit on periods adjacent to what they score. Any scikit-learn learner. Cluster, two-way and Driscoll–Kraay variance.</p>
+        <p><b>Use when:</b> controls are high-dimensional or nonlinear and you want one treatment effect.</p>
+        <p style="font-size:.83rem;color:var(--muted)">Chernozhukov et al. (2018) · Sneller (2026)</p>
+      </div>
+
+      <div class="card t-lav">
+        <span class="chip c-lav">dynpanelai.ortho</span>
+        <h3>Orthogonal &amp; debiased Lasso</h3>
+        <p>Heterogeneous treatment effects when the CATE itself is high-dimensional. Neighbours-left-out cross-fitting, orthogonal Lasso, CLIME precision-matrix debiasing, and simultaneous bands from a Gaussian multiplier bootstrap.</p>
+        <p><b>Use when:</b> you want effects across many groups and honest inference about <em>which</em> differ.</p>
+        <p style="font-size:.83rem;color:var(--muted)">Semenova, Goldman, Chernozhukov &amp; Taddy (2023)</p>
+      </div>
+
+      <div class="card t-sage">
+        <span class="chip c-sage">dynpanelai.hdpanel</span>
+        <h3>Weakly sparse panel Lasso</h3>
+        <p>Penalises slopes and fixed effects at different rates, because $NT$ observations identify each slope but only $T$ identify each unit effect. Desparsified via nodewise regression for honest, uniformly valid bands.</p>
+        <p><b>Use when:</b> $p$ and $N$ both exceed $NT$ and you need inference on many coefficients at once.</p>
+        <p style="font-size:.83rem;color:var(--muted)">Kock &amp; Tang (2019) · van de Geer et al. (2014)</p>
+      </div>
+
+      <div class="card t-rose">
+        <span class="chip c-rose">dynpanelai.shrink</span>
+        <h3>Optimal shrinkage &amp; forecasting</h3>
+        <p>URE and Empirical Bayes shrinkage of the fixed effects, plus penalised-FE forecasting where the penalty falls <em>only</em> on the unit effects. Rolling-origin blocked CV with the one-standard-error rule.</p>
+        <p><b>Use when:</b> the goal is out-of-sample accuracy rather than an unbiased coefficient.</p>
+        <p style="font-size:.83rem;color:var(--muted)">Kwon (2026) · Cornejo &amp; Sosa-Escudero (2026) · Liu, Moon &amp; Schorfheide (2020)</p>
+      </div>
+
+      <div class="card t-blue">
+        <span class="chip c-blue">dynpanelai.neural</span>
+        <h3>AC-GATE lag discovery</h3>
+        <p>Learns an entity-specific lag distribution conditioned on observable proxies, making the effective lag a structural output rather than a post-hoc explanation. Ships with the full L0–L3 audit protocol and permutation tests.</p>
+        <p><b>Use when:</b> you want to know <em>which units respond over which horizon</em>, and to prove it.</p>
+        <p style="font-size:.83rem;color:var(--muted)">Xu (2026) · optional extra: <code>pip install dynpanelai[neural]</code></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= THEORY ================= -->
+<section id="theory" style="background:linear-gradient(180deg,var(--bg),#FBFCFE)">
+  <div class="wrap">
+    <div class="eyebrow">Foundations</div>
+    <h2>The theory, briefly</h2>
+    <p class="lead">Enough to know what each estimator assumes and where it breaks.</p>
+
+    <h3 style="margin-top:34px">The model and the bias</h3>
+    <p>A dynamic panel with unit effects:</p>
+    $$y_{it} = \rho\, y_{i,t-1} + \theta\, d_{it} + \alpha_i + u_{it}.$$
+    <p>The within transform removes $\alpha_i$ but subtracts $\bar u_i$ from the error and $\bar y_{i,-1}$ from the regressor. Since $\bar y_{i,-1}$ contains $u_{it}$, the two are correlated, and</p>
+    $$\mathbb E[\hat\rho_{FE}] - \rho \;\approx\; -\frac{1+\rho}{T-1},$$
+    <p>a downward bias that shrinks only in $T$, never in $N$.</p>
+
+    <h3 style="margin-top:34px">Two ways to remove fixed effects</h3>
+    <div class="grid g2" style="margin:18px 0">
+      <div class="card">
+        <h4>First differences</h4>
+        $$\Delta z_{it} = z_{it} - z_{i,t-1}$$
+        <p style="font-size:.92rem">Removes $\alpha_i$, but the transformed error becomes MA(1). Lags 2 and deeper remain valid instruments.</p>
+      </div>
+      <div class="card">
+        <h4>Forward orthogonal deviations</h4>
+        $$\Delta^{\perp} z_{it} = c_t\Bigl(z_{it} - \tfrac{1}{T-t}\sum_{s>t} z_{is}\Bigr)$$
+        <p style="font-size:.92rem">With $c_t=\sqrt{(T-t)/(T-t+1)}$. Removes $\alpha_i$ <b>and</b> leaves the error serially uncorrelated — more efficient, and compatible with cross-fitting.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:34px">Neyman orthogonality</h3>
+    <p>A moment function $\psi(W;\theta,\eta)$ is Neyman-orthogonal at the truth when its derivative with respect to the nuisance vanishes:</p>
+    $$\left.\frac{\partial}{\partial r}\,\mathbb E\bigl[\psi(W;\theta_0,\eta_0+r h)\bigr]\right|_{r=0}=0 .$$
+    <p>Nuisance error then enters only at <em>second</em> order, so the product-rate condition $\delta_Y\delta_D=o(n^{-1/2})$ suffices — each nuisance may converge slowly, as regularised machine learners do.</p>
+
+    <div class="note n-gold">
+      <p><b>Why this matters practically.</b> It is the difference between an estimator you can hand a random forest and one you cannot. Without orthogonality, regularisation bias transmits directly into your treatment effect, and no amount of sample size rescues it.</p>
+    </div>
+
+    <h3 style="margin-top:34px">Cross-fitting under dependence</h3>
+    <p>Orthogonality alone is not enough: the nuisance must be estimated on data independent of where the score is evaluated. Random i.i.d. folds leak in a panel, because the observation next to a held-out one is strongly correlated with it. Two fixes:</p>
+    <ul class="tick">
+      <li><b>Blocked-time folds with a buffer.</b> Hold out contiguous periods and purge $B_*=B+L_*$ periods on each side, with $B=\lceil\log T\rceil$. This satisfies $B_T\to\infty$ and $B_T/T\to 0$.</li>
+      <li><b>Neighbours-left-out folds.</b> Score block $k$ using nuisances fit on every block except $k$ and its two immediate neighbours. Strassen's coupling shows that under $\beta$-mixing the block and its quasi-complement behave like independent copies.</li>
+    </ul>
+
+    <h3 style="margin-top:34px">The plug-in penalty</h3>
+    <p>Cross-validated LASSO has no guarantee for the <em>rate</em> that orthogonal-score estimators need, and it under-penalises. The rigorous penalty is</p>
+    $$\lambda_0 = 2c\sqrt{n}\,\Phi^{-1}\!\Bigl(1-\frac{\gamma}{2p}\Bigr),\qquad
+      \lambda_j=\lambda_0\widehat\Upsilon_j,\qquad
+      \widehat\Upsilon_j=\sqrt{\tfrac1n\textstyle\sum_i \hat e_i^2 x_{ij}^2},$$
+    <p>with loadings refined iteratively. In panels the loadings should be <b>cluster-robust</b> — pass <code>clusters=</code> to <code>rlasso</code>.</p>
+
+    <div class="note n-coral">
+      <p><b>Assumptions you must check, not assume.</b> DML and orthogonal Lasso need $\sqrt N/T\to0$. The weakly sparse panel Lasso needs $\sum_i|\eta_i|^\nu\le E$ with $E$ small. Every estimator in this package emits a warning when it detects that its own assumption looks violated.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RESULTS ================= -->
+<section id="results">
+  <div class="wrap">
+    <div class="eyebrow">Evidence</div>
+    <h2>Results, tables and figures</h2>
+    <p class="lead">Every number and figure below was produced by the package itself. Nothing is illustrative.</p>
+
+    <div class="grid g4" style="margin:30px 0">
+      <div class="stat"><div class="v" style="color:var(--teal)">96.7%</div><div class="l">AB-LASSO CI coverage at T=14</div></div>
+      <div class="stat"><div class="v" style="color:var(--coral)">0%</div><div class="l">Fixed-effects coverage, same design</div></div>
+      <div class="stat"><div class="v" style="color:var(--blue)">0.955</div><div class="l">AC-GATE lag recovery (Spearman)</div></div>
+      <div class="stat"><div class="v" style="color:var(--gold)">31</div><div class="l">Tests passing</div></div>
+    </div>
+
+    <h3 style="margin-top:38px">Estimator comparison on real data</h3>
+    <p>UK firm employment, 140 firms × 9 years — the canonical Arellano–Bond panel. The same coefficient, five ways.</p>
+
+    <div class="tw">
+      <table>
+        <caption>Dependent variable: log employment. Standard errors in parentheses, clustered by firm. *** p&lt;0.01, ** p&lt;0.05, * p&lt;0.10.</caption>
+        <thead><tr>
+          <th>Coefficient</th><th class="num">Fixed effects</th><th class="num">Debiased FE</th>
+          <th class="num">Anderson–Hsiao</th><th class="num">Difference GMM</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><b>L1.n</b></td><td class="num">0.6279***</td><td class="num">0.7628***</td><td class="num">1.0936***</td><td class="num">0.3118</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.0972)</td><td class="num se">(0.0972)</td><td class="num se">(0.2424)</td><td class="num se">(0.6357)</td></tr>
+          <tr><td><b>L2.n</b></td><td class="num">−0.1869**</td><td class="num">−0.2770***</td><td class="num">—</td><td class="num">−0.0445</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.0940)</td><td class="num se">(0.0940)</td><td class="num se">—</td><td class="num se">(0.1825)</td></tr>
+          <tr><td><b>w</b> (log wage)</td><td class="num">−0.4344***</td><td class="num">−0.4100***</td><td class="num">−0.5566**</td><td class="num">−1.2939</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.1235)</td><td class="num se">(0.1235)</td><td class="num se">(0.2571)</td><td class="num se">(0.8251)</td></tr>
+          <tr><td><b>k</b> (log capital)</td><td class="num">0.3904***</td><td class="num">0.3623***</td><td class="num">0.1354*</td><td class="num">0.3698**</td></tr>
+          <tr><td class="se">&nbsp;</td><td class="num se">(0.0427)</td><td class="num se">(0.0427)</td><td class="num se">(0.0812)</td><td class="num se">(0.1580)</td></tr>
+          <tr style="border-top:2px solid var(--line)"><td>Observations</td><td class="num">751</td><td class="num">751</td><td class="num">751</td><td class="num">611</td></tr>
+          <tr><td>Firms</td><td class="num">140</td><td class="num">140</td><td class="num">140</td><td class="num">140</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <figure>
+      <img src="assets/fig_comparison.svg" alt="Forest plot of persistence estimates across five estimators with confidence intervals">
+      <figcaption><b>Figure 1.</b> Persistence estimates diverge sharply by method. The within estimator understates persistence (Nickell bias); the analytical correction moves it up; the IV estimators move further still — at a large cost in variance. Reading across is the substance of this literature.</figcaption>
+    </figure>
+
+    <h3 style="margin-top:38px">Bias is not enough — coverage is the test</h3>
+    <p>A Monte Carlo with known truth $\rho = 0.75$, 120 replications at $N=120$, $T=14$.</p>
+
+    <figure>
+      <img src="assets/fig_montecarlo.svg" alt="Boxplots of sampling distributions and bar chart of confidence interval coverage">
+      <figcaption><b>Figure 2.</b> An estimator can look reasonable and still never cover the truth. Fixed effects achieves <b class="bad">0%</b> coverage and the analytical correction only <b class="bad">5%</b>, while AB-LASSO reaches <b class="good">96.7%</b> against a nominal 95%. This is why the packages's estimators report coverage-relevant diagnostics rather than point estimates alone.</figcaption>
+    </figure>
+
+    <div class="tw">
+      <table>
+        <caption>Monte Carlo, 120 replications, N=120, T=14, true ρ = 0.75.</caption>
+        <thead><tr><th>Estimator</th><th class="num">Bias</th><th class="num">RMSE</th><th class="num">95% coverage</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td>Fixed effects</td><td class="num">large, negative</td><td class="num">high</td><td class="num bad">0%</td><td>Nickell bias dominates</td></tr>
+          <tr><td>Debiased FE (analytical)</td><td class="num">reduced</td><td class="num">moderate</td><td class="num bad">5%</td><td>Leading term only; T too small</td></tr>
+          <tr class="best"><td>AB-LASSO</td><td class="num">small</td><td class="num">low</td><td class="num">96.7%</td><td>Essentially nominal</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:38px">Forecasting: shrinkage beats instrumental variables</h3>
+    <figure>
+      <img src="assets/fig_forecast.svg" alt="Bar chart of percentage RMSE difference relative to LSDV across estimators">
+      <figcaption><b>Figure 3.</b> A dynamic panel where half the fixed effects are exactly zero. Shrinkage accepts bias to buy variance reduction and wins on out-of-sample RMSE. Anderson–Hsiao dominates on <em>bias</em> and loses badly on <em>forecast error</em> — consistency is not the only thing that matters.</figcaption>
+    </figure>
+
+    <h3 style="margin-top:38px">Recovering heterogeneous lags</h3>
+    <figure>
+      <img src="assets/fig_acgate.svg" alt="Heatmap of learned lag weights and scatter of recovered versus true effective lags">
+      <figcaption><b>Figure 4.</b> AC-GATE learns an entity-specific lag distribution $\omega_{i,k}$ from observable proxies, and recovers the true effective lag with Spearman <b>0.955</b> on synthetic data with known ground truth. The L1 guard rejects degenerate solutions where every entity gets the same lag; the L2 permutation test checks alignment against pre-specified stratifiers.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= GUIDE ================= -->
+<section id="guide" style="background:linear-gradient(180deg,#FBFCFE,var(--bg))">
+  <div class="wrap">
+    <div class="eyebrow">Getting started</div>
+    <h2>A guide, step by step</h2>
+    <p class="lead">From a CSV file to a finished journal table. Every block runs as written.</p>
+
+    <ol class="steps" style="margin-top:32px">
+      <li>
+        <h4>Install</h4>
+<pre><code><span class="c"># core</span>
+pip install dynpanelai
+
+<span class="c"># with figures and the neural module</span>
+pip install <span class="s">"dynpanelai[all]"</span></code></pre>
+      </li>
+
+      <li>
+        <h4>Build the panel</h4>
+        <p>Long format: one row per unit-period. <code>PanelData</code> sorts, validates, and rejects duplicate <code>(unit, time)</code> pairs immediately.</p>
+<pre><code><span class="k">import</span> dynpanelai <span class="k">as</span> dp
+
+df = dp.datasets.<span class="f">load_abond_employment</span>()
+panel = dp.<span class="f">PanelData</span>(df, unit=<span class="s">"id"</span>, time=<span class="s">"year"</span>)
+<span class="f">print</span>(panel)
+<span class="c"># PanelData(N=140, T=9, obs=1031, unbalanced, ...)</span></code></pre>
+        <div class="note n-teal" style="margin-top:12px">
+          <p><b>Lags are gap-aware.</b> A firm missing 2003 gets <code>NaN</code> for its 2004 lag, not the 2002 value. A plain <code>groupby().shift()</code> would silently hand you the wrong number.</p>
+        </div>
+      </li>
+
+      <li>
+        <h4>Check before you estimate</h4>
+        <p>Two numbers decide which methods are even admissible.</p>
+<pre><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="f">print</span>(<span class="s">"sqrt(N)/T ="</span>, np.<span class="f">sqrt</span>(panel.N) / panel.T)   <span class="c"># need → 0 for DML</span>
+
+m = panel.T * (panel.T - <span class="n">1</span>) // <span class="n">2</span>
+<span class="f">print</span>(<span class="s">"m^2/(NT) ="</span>, m**<span class="n">2</span> / (panel.N * panel.T))    <span class="c"># need small for AB</span></code></pre>
+      </li>
+
+      <li>
+        <h4>Estimate</h4>
+        <p>Functional or object-oriented — both work.</p>
+<pre><code>res = dp.<span class="f">diff_gmm</span>(panel, y=<span class="s">"n"</span>, lags=<span class="n">2</span>,
+                  predetermined=[<span class="s">"w"</span>], exogenous=[<span class="s">"k"</span>],
+                  gmm_lags=(<span class="n">2</span>, <span class="n">4</span>), steps=<span class="n">2</span>)
+<span class="f">print</span>(res.<span class="f">summary</span>())</code></pre>
+      </li>
+
+      <li>
+        <h4>Read the diagnostics</h4>
+        <div class="tw" style="margin-top:6px">
+          <table>
+            <thead><tr><th>Test</th><th>You want</th><th>Because</th></tr></thead>
+            <tbody>
+              <tr><td><b>AR(1)</b></td><td class="good">rejects</td><td>The differenced error is MA(1) by construction</td></tr>
+              <tr><td><b>AR(2)</b></td><td class="good">does not reject</td><td>Otherwise lag-2 instruments are invalid</td></tr>
+              <tr><td><b>Hansen J</b></td><td class="good">does not reject, but p &lt; 0.9</td><td>p near 1.00 signals instrument proliferation, not a good model</td></tr>
+              <tr><td><b>Instrument count</b></td><td class="good">fewer than units</td><td>Otherwise the weight matrix is singular and Hansen has no power</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </li>
+
+      <li>
+        <h4>Compare estimators</h4>
+<pre><code>results = {
+    <span class="s">"FE"</span>:       dp.<span class="f">fixed_effects</span>(panel, <span class="s">"n"</span>, lags=<span class="n">2</span>, x=[<span class="s">"w"</span>, <span class="s">"k"</span>]),
+    <span class="s">"DFE-A"</span>:    dp.<span class="f">debiased_fe</span>(panel, <span class="s">"n"</span>, lags=<span class="n">2</span>, x=[<span class="s">"w"</span>, <span class="s">"k"</span>]),
+    <span class="s">"Diff GMM"</span>: dp.<span class="f">diff_gmm</span>(panel, <span class="s">"n"</span>, lags=<span class="n">2</span>,
+                              predetermined=[<span class="s">"w"</span>], exogenous=[<span class="s">"k"</span>]),
+}
+<span class="f">print</span>(dp.<span class="f">comparison_table</span>(results, params=[<span class="s">"L1.n"</span>, <span class="s">"w"</span>, <span class="s">"k"</span>]))</code></pre>
+      </li>
+
+      <li>
+        <h4>Long-run effects</h4>
+        <p>The coefficient on $d$ is only the impact effect. The long run is $\theta/(1-\sum\rho)$, with a delta-method standard error.</p>
+<pre><code>lr, se = res.<span class="f">long_run</span>(<span class="s">"w"</span>, [<span class="s">"L1.n"</span>, <span class="s">"L2.n"</span>])</code></pre>
+      </li>
+
+      <li>
+        <h4>Export publication output</h4>
+<pre><code><span class="k">open</span>(<span class="s">"table1.tex"</span>, <span class="s">"w"</span>).<span class="f">write</span>(
+    dp.<span class="f">comparison_to_latex</span>(results,
+        caption=<span class="s">"Employment dynamics in UK firms"</span>,
+        label=<span class="s">"tab:employment"</span>)
+)
+
+<span class="k">from</span> dynpanelai.report <span class="k">import</span> comparison_plot
+<span class="f">comparison_plot</span>(results, <span class="s">"L1.n"</span>)   <span class="c"># 300 dpi, greyscale-safe</span></code></pre>
+      </li>
+    </ol>
+
+    <div class="note n-lav" style="margin-top:26px">
+      <p><b>Full documentation.</b> The <a href="https://github.com/merwanroudane/dynpanelai/blob/main/docs/user_guide.md">user guide</a> covers this in depth with five complete worked examples; the <a href="https://github.com/merwanroudane/dynpanelai/blob/main/docs/syntax_reference.md">syntax reference</a> documents every argument of every estimator; <a href="https://github.com/merwanroudane/dynpanelai/blob/main/docs/methods.md">methods</a> gives the derivations.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DATA ================= -->
+<section id="data">
+  <div class="wrap">
+    <div class="eyebrow">Included</div>
+    <h2>Real data and simulation designs</h2>
+    <p class="lead">Two real economics panels ship inside the package, plus the Monte Carlo designs from each paper.</p>
+
+    <div class="tw" style="margin-top:26px">
+      <table>
+        <thead><tr><th>Dataset</th><th class="num">Units</th><th class="num">Periods</th><th>Content</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>load_covid_counties()</code></td><td class="num">2,510</td><td class="num">32</td>
+            <td>US county COVID-19 case growth, school and college foot traffic, mask mandates, stay-at-home orders, gathering bans</td>
+            <td>Chernozhukov, Fernández-Val, Huang &amp; Wang (2024)</td>
+          </tr>
+          <tr>
+            <td><code>load_abond_employment()</code></td><td class="num">140</td><td class="num">9</td>
+            <td>UK firm log employment, wages, capital, industry output</td>
+            <td>Arellano &amp; Bond (1991)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid g4" style="margin-top:22px">
+      <div class="card"><h4>make_partially_linear_panel</h4><p style="font-size:.88rem">High-dimensional controls, optional nonlinear $g_0$. Sneller (2026).</p></div>
+      <div class="card"><h4>make_ab_lasso_panel</h4><p style="font-size:.88rem">Bun–Kiviet design with predetermined treatment and $t$ innovations.</p></div>
+      <div class="card"><h4>make_shrinkage_panel</h4><p style="font-size:.88rem">Controllable fraction of exactly-zero fixed effects.</p></div>
+      <div class="card"><h4>make_heterogeneous_lag_panel</h4><p style="font-size:.88rem">Entity-conditioned lags with known ground truth.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CITE ================= -->
+<section id="cite" style="background:linear-gradient(180deg,var(--bg),#F7F9FC)">
+  <div class="wrap">
+    <div class="eyebrow">Attribution</div>
+    <h2>Citation</h2>
+    <p>If <code>dynpanelai</code> contributes to published work, please cite it — and the paper behind whichever estimator you used. Each module docstring gives the full reference.</p>
+<pre><code>@software{roudane_dynpanelai_2026,
+  author  = {Roudane, Merwan},
+  title   = {dynpanelai: Machine Learning and Modern Inference for
+             Dynamic Panel Data Models},
+  year    = {2026},
+  url     = {https://github.com/merwanroudane/dynpanelai},
+  version = {0.1.0}
+}</code></pre>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <h4>Package</h4>
+        <a href="https://pypi.org/project/dynpanelai/">PyPI</a>
+        <a href="https://github.com/merwanroudane/dynpanelai">GitHub repository</a>
+        <a href="https://github.com/merwanroudane/dynpanelai/releases">Releases</a>
+        <a href="https://github.com/merwanroudane/dynpanelai/blob/main/LICENSE">MIT licence</a>
+      </div>
+      <div>
+        <h4>Documentation</h4>
+        <a href="https://github.com/merwanroudane/dynpanelai/blob/main/docs/user_guide.md">User guide</a>
+        <a href="https://github.com/merwanroudane/dynpanelai/blob/main/docs/syntax_reference.md">Syntax reference</a>
+        <a href="https://github.com/merwanroudane/dynpanelai/blob/main/docs/methods.md">Methods &amp; theory</a>
+        <a href="https://github.com/merwanroudane/dynpanelai/tree/main/examples">Runnable examples</a>
+      </div>
+      <div>
+        <h4>Key papers</h4>
+        <a href="https://arxiv.org/abs/2402.00584">Arellano–Bond LASSO</a>
+        <a href="https://arxiv.org/abs/1712.09988">Orthogonal Lasso for panels</a>
+        <a href="https://arxiv.org/abs/1501.00478">Uniform inference, Kock &amp; Tang</a>
+        <a href="https://arxiv.org/abs/2308.12485">Optimal shrinkage, Kwon</a>
+      </div>
+      <div>
+        <h4>Author</h4>
+        <a href="https://github.com/merwanroudane">GitHub profile</a>
+        <a href="https://github.com/merwanroudane/dynpanelai/issues">Report an issue</a>
+        <a href="mailto:merwanroudane920@gmail.com">Email</a>
+      </div>
+    </div>
+    <div class="fbot">
+      <div>© 2026 <b style="color:var(--ink)">Dr Merwan Roudane</b> · Released under the MIT licence</div>
+      <div>Built with NumPy, pandas, SciPy and scikit-learn</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var pick = {};
+  document.querySelectorAll('.opts').forEach(function(g){
+    g.querySelectorAll('.opt').forEach(function(b){
+      b.addEventListener('click', function(){
+        g.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel')});
+        b.classList.add('sel');
+        pick[g.dataset.g] = b.dataset.v;
+        decide();
+      });
+    });
+  });
+
+  var R = {
+    gmm: ['dynpanelai.gmm — Difference / System GMM',
+      'Your panel is short, so moment-based estimation is the right tool. The ML estimators here need sqrt(N)/T → 0 and will mislead you at this T. Watch the Hansen p-value: above ~0.9 means too many instruments.',
+      'res = dp.diff_gmm(panel, y="y", lags=1,\n                  predetermined=["d"],\n                  gmm_lags=(2, 4), collapse=True, steps=2)'],
+    bias: ['dynpanelai.biascorr — Bias-corrected fixed effects',
+      'Short panel, and you want the efficiency of the within estimator without its Nickell bias. The split-panel jackknife is the most robust choice; the analytical correction is cheaper but removes only the leading term.',
+      'res = dp.split_panel_jackknife(panel, "y", dimension="time",\n                               lags=1, x=["d"])'],
+    ablasso: ['dynpanelai.ablasso — Arellano–Bond LASSO',
+      'Long T means the number of moment conditions grows like T², so plain Arellano–Bond is biased by overfitting. LASSO selects the informative moments; cross-fitting removes the residual bias.',
+      'res = dp.ABLasso(y="y", d="d", lags=2, transform="fod",\n                 split=True, k_folds=2, n_splits=50).fit(panel)'],
+    dml: ['dynpanelai.dml — Double machine learning',
+      'High-dimensional or nonlinear controls with one target coefficient. Blocked-time cross-fitting with a buffer keeps nuisance estimation independent of where the score is evaluated. Try both a linear and a nonlinear learner.',
+      'res = dp.DMLDynamicPanel(y="y", d="d", x=controls,\n                         k_folds=4, buffer="log",\n                         learner="lasso").fit(panel)'],
+    ortho: ['dynpanelai.ortho — Orthogonal &amp; debiased Lasso',
+      'You want effects that vary across many groups. The debiasing step restores normality after shrinkage, and simultaneous bands stop you from multiple-testing your way into false discoveries.',
+      'res = dp.OrthogonalLasso(y="y", p="d", controls=controls,\n                         heterogeneity=["group"],\n                         k_blocks=10, debias="clime").fit(panel)\nprint(res.extra["simultaneous_bands"])'],
+    hd: ['dynpanelai.hdpanel — Weakly sparse panel Lasso',
+      'You need inference on many coefficients at once, uniformly valid. Assumes the fixed effects are weakly sparse — the estimator warns if that looks violated, in which case prefer GMM or AB-LASSO.',
+      'res = dp.PanelLasso(y="y", lags=1, x=controls,\n                    lambda_M=0.05).fit(panel)'],
+    shrink: ['dynpanelai.shrink — Optimal shrinkage',
+      'Forecasting is a different job from inference. Shrinkage accepts bias to cut variance, and beats both pooled OLS and IV on out-of-sample error. Do not then report the shrunken coefficients as unbiased estimates.',
+      'est = dp.PenalizedFE(y="y", x=["x"], method="ure")\nest.fit(train)\npred = est.predict(test)'],
+    neural: ['dynpanelai.neural — AC-GATE lag discovery',
+      'You want to know which units respond over which horizon. Always run the audit: forecast accuracy alone never establishes that a learned lag structure is real.',
+      'from dynpanelai.neural import ACGate, run_audit\nres = ACGate(y="y", features=feats, proxies=prox, K=8).fit(panel)\nprint(res.effective_lag)']
+  };
+
+  function decide(){
+    if(!(pick.t && pick.p && pick.goal)) return;
+    var key;
+    if(pick.goal === 'lag')        key = 'neural';
+    else if(pick.goal === 'fcast') key = 'shrink';
+    else if(pick.t === 'short')    key = (pick.goal === 'all') ? 'bias' : 'gmm';
+    else if(pick.p === 'few')      key = 'ablasso';
+    else if(pick.goal === 'het')   key = 'ortho';
+    else if(pick.goal === 'all')   key = 'hd';
+    else                           key = 'dml';
+
+    var r = R[key];
+    document.getElementById('rec').innerHTML = r[0];
+    document.getElementById('why').innerHTML = r[1];
+    document.getElementById('snip').textContent = r[2];
+    document.getElementById('ans').classList.add('show');
+  }
+})();
+</script>
+</body>
+</html>
